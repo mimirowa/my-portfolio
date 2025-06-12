@@ -150,6 +150,13 @@ The HTML page used for quick testing of these endpoints has been moved to
 3. Call the API directly (e.g., using `curl` or Postman) to integrate with other tools.
 4. Update prices periodically using the "Update Prices" button or the corresponding API endpoint.
 
+## Import trades
+
+Paste your Google Finance activity text directly into the app.
+Open the **Import ▸ Google Finance** dialog on the Transactions page, preview the
+parsed rows and confirm to save them. Save the confirmed rows to your portfolio
+with the **Confirm & Save** button.
+
 ## Running Tests
 
 Install the test requirements and run pytest:
