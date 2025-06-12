@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert.jsx'
 import { Loader2, Search } from 'lucide-react'
 
-const API_BASE_URL = 'http://localhost:5000/api/portfolio'
+const API_BASE_URL = import.meta.env.VITE_API_URL
 
 function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
   const [formData, setFormData] = useState({

@@ -10,7 +10,7 @@ import TransactionHistory from './components/TransactionHistory'
 import AddTransactionModal from './components/AddTransactionModal'
 import './App.css'
 
-const API_BASE_URL = 'http://localhost:5000/api/portfolio'
+const API_BASE_URL = import.meta.env.VITE_API_URL
 
 function App() {
   const [portfolioData, setPortfolioData] = useState([])
