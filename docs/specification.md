@@ -92,9 +92,10 @@ pnpm run dev  # Frontend runs on http://localhost:5173
 2. Enter stock symbol (e.g., AAPL, GOOGL, MSFT)
 3. Click search to fetch current info
 4. Select transaction type (Buy/Sell)
-5. Enter quantity and price
-6. Set date
-7. Click "Add Transaction"
+5. Choose currency (USD, EUR, SEK, GBP, JPY)
+6. Enter quantity and price
+7. Set date
+8. Click "Add Transaction"
 
 ### Viewing Portfolio Performance
 

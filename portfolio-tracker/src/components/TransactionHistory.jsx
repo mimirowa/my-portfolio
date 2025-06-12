@@ -5,8 +5,10 @@ import { Badge } from '@/components/ui/badge.jsx'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table.jsx'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog.jsx'
 import { Trash2, TrendingUp, TrendingDown } from 'lucide-react'
+import { getCurrencySymbol } from '@/lib/utils.js'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL
+const BASE_CURRENCY = import.meta.env.VITE_BASE_CURRENCY || 'USD'
 
 function TransactionHistory({ transactions, onTransactionDeleted }) {
   const [deletingTransaction, setDeletingTransaction] = useState(null)
@@ -91,10 +93,12 @@ function TransactionHistory({ transactions, onTransactionDeleted }) {
                     {transaction.quantity.toLocaleString()}
                   </TableCell>
                   <TableCell className="text-right">
-                    ${transaction.price_per_share.toFixed(2)}
+                    {getCurrencySymbol(transaction.currency || BASE_CURRENCY)}
+                    {transaction.price_per_share.toFixed(2)}
                   </TableCell>
                   <TableCell className="text-right font-medium">
-                    ${transaction.total_value.toLocaleString()}
+                    {getCurrencySymbol(transaction.currency || BASE_CURRENCY)}
+                    {transaction.total_value.toLocaleString()}
                   </TableCell>
                   <TableCell className="text-center">
                     <AlertDialog>
@@ -115,7 +119,7 @@ function TransactionHistory({ transactions, onTransactionDeleted }) {
                             Are you sure you want to delete this transaction? This action cannot be undone.
                             <br /><br />
                             <strong>Transaction Details:</strong><br />
-                            {transaction.transaction_type.toUpperCase()} {transaction.quantity} shares of {transaction.stock_symbol} at ${transaction.price_per_share} on {new Date(transaction.transaction_date).toLocaleDateString()}
+                            {transaction.transaction_type.toUpperCase()} {transaction.quantity} shares of {transaction.stock_symbol} at {getCurrencySymbol(transaction.currency || BASE_CURRENCY)}{transaction.price_per_share} on {new Date(transaction.transaction_date).toLocaleDateString()}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -158,7 +162,8 @@ function TransactionHistory({ transactions, onTransactionDeleted }) {
             <div>
               <p className="text-gray-600">Total Volume</p>
               <p className="font-medium">
-                ${transactions.reduce((sum, t) => sum + t.total_value, 0).toLocaleString()}
+                {getCurrencySymbol(BASE_CURRENCY)}
+                {transactions.reduce((sum, t) => sum + t.total_value, 0).toLocaleString()}
               </p>
             </div>
           </div>

@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table.jsx'
 import { TrendingUp, TrendingDown, RefreshCw, ExternalLink } from 'lucide-react'
+import { getCurrencySymbol } from '@/lib/utils.js'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL
+const BASE_CURRENCY = import.meta.env.VITE_BASE_CURRENCY || 'USD'
 
 function StockHoldings({ portfolioData, onRefresh, loading }) {
   const [updatingStock, setUpdatingStock] = useState(null)
@@ -86,11 +88,13 @@ function StockHoldings({ portfolioData, onRefresh, loading }) {
                     {stock.quantity.toLocaleString()}
                   </TableCell>
                   <TableCell className="text-right">
-                    ${stock.avg_cost_basis?.toFixed(2) || 'N/A'}
+                    {getCurrencySymbol(BASE_CURRENCY)}
+                    {stock.avg_cost_basis?.toFixed(2) || 'N/A'}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      ${stock.current_price?.toFixed(2) || 'N/A'}
+                      {getCurrencySymbol(BASE_CURRENCY)}
+                      {stock.current_price?.toFixed(2) || 'N/A'}
                       {stock.last_updated && (
                         <span className="text-xs text-gray-500">
                           {new Date(stock.last_updated).toLocaleDateString()}
@@ -99,7 +103,8 @@ function StockHoldings({ portfolioData, onRefresh, loading }) {
                     </div>
                   </TableCell>
                   <TableCell className="text-right font-medium">
-                    ${stock.current_value?.toLocaleString() || 'N/A'}
+                    {getCurrencySymbol(BASE_CURRENCY)}
+                    {stock.current_value?.toLocaleString() || 'N/A'}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
@@ -108,8 +113,9 @@ function StockHoldings({ portfolioData, onRefresh, loading }) {
                       ) : (
                         <TrendingDown className="h-4 w-4 text-red-600" />
                       )}
-                      <span className={`font-medium ${stock.total_gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ${stock.total_gain?.toLocaleString() || 'N/A'}
+                      <span className={`font-medium ${stock.total_gain >= 0 ? 'text-green-600' : 'text-red-600'}`}> 
+                        {getCurrencySymbol(BASE_CURRENCY)}
+                        {stock.total_gain?.toLocaleString() || 'N/A'}
                       </span>
                     </div>
                   </TableCell>
@@ -161,13 +167,15 @@ function StockHoldings({ portfolioData, onRefresh, loading }) {
             <div>
               <p className="text-gray-600">Total Value</p>
               <p className="font-medium">
-                ${portfolioData.reduce((sum, stock) => sum + (stock.current_value || 0), 0).toLocaleString()}
+                {getCurrencySymbol(BASE_CURRENCY)}
+                {portfolioData.reduce((sum, stock) => sum + (stock.current_value || 0), 0).toLocaleString()}
               </p>
             </div>
             <div>
               <p className="text-gray-600">Total Gain/Loss</p>
               <p className={`font-medium ${portfolioData.reduce((sum, stock) => sum + (stock.total_gain || 0), 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                ${portfolioData.reduce((sum, stock) => sum + (stock.total_gain || 0), 0).toLocaleString()}
+                {getCurrencySymbol(BASE_CURRENCY)}
+                {portfolioData.reduce((sum, stock) => sum + (stock.total_gain || 0), 0).toLocaleString()}
               </p>
             </div>
           </div>

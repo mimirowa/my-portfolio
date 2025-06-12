@@ -8,9 +8,11 @@ The front-end uses Vite environment variables. Copy `.env.example` in `portfolio
 
 ```
 VITE_API_URL=http://localhost:5000/api/portfolio
+VITE_BASE_CURRENCY=USD
 ```
 
 `VITE_API_URL` should point to the portfolio API base URL.
+`VITE_BASE_CURRENCY` sets the default currency shown in the UI.
 
 ## Example setup
 
@@ -144,7 +146,7 @@ The HTML page used for quick testing of these endpoints has been moved to
 ## Usage
 
 1. Start the backend and frontend using the steps above.
-2. Use the web interface to add transactions and view holdings.
+2. Use the web interface to add transactions (choose a currency for each entry) and view holdings.
 3. Call the API directly (e.g., using `curl` or Postman) to integrate with other tools.
 4. Update prices periodically using the "Update Prices" button or the corresponding API endpoint.
 
