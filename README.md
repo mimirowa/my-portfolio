@@ -1,6 +1,6 @@
-# My Portfolio Tracker
+# Portfolio Tracker
 
-This repository contains a small portfolio tracker built with Vite and a simple API.
+This repository contains a Flask backend (`portfolio-api`) and a React frontend (`portfolio-tracker`).
 
 ## Environment Variables
 
@@ -11,11 +11,6 @@ VITE_API_URL=http://localhost:5000/api/portfolio
 ```
 
 `VITE_API_URL` should point to the portfolio API base URL.
-=======
-
-# Portfolio Tracker
-
-This repository contains a Flask backend (`portfolio-api`) and a React frontend (`portfolio-tracker`).
 
 ## Example setup
 
@@ -34,7 +29,6 @@ SECRET_KEY=your-secret-key DATABASE_URL=sqlite:///path/to/app.db python portfoli
 ```
 
 If these variables are not set, the app uses default values defined in `main.py`.
-=======
 
 # My Portfolio
 
@@ -120,8 +114,6 @@ The app will be available at the printed Vite dev server address (usually `http:
 3. Call the API directly (e.g., using `curl` or Postman) to integrate with other tools.
 4. Update prices periodically using the "Update Prices" button or the corresponding API endpoint.
 
-Happy investing!
-
 ## Running Tests
 
 Install the test requirements and run pytest:
@@ -130,3 +122,10 @@ Install the test requirements and run pytest:
 pip install -r requirements-dev.txt
 pytest
 ```
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+Happy investing!
+
