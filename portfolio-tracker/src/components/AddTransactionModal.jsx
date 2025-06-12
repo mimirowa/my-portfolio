@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label.jsx'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.jsx'
 import { Alert, AlertDescription } from '@/components/ui/alert.jsx'
 import { Loader2, Search } from 'lucide-react'
+import { getCurrencySymbol } from '@/lib/utils.js'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL
+const BASE_CURRENCY = import.meta.env.VITE_BASE_CURRENCY || 'USD'
 
 function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
   const [formData, setFormData] = useState({
@@ -15,7 +17,8 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
     transaction_type: 'buy',
     quantity: '',
     price_per_share: '',
-    transaction_date: new Date().toISOString().split('T')[0]
+    transaction_date: new Date().toISOString().split('T')[0],
+    currency: BASE_CURRENCY
   })
   const [loading, setLoading] = useState(false)
   const [searchingStock, setSearchingStock] = useState(false)
@@ -135,7 +138,8 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
           ...formData,
           symbol: formData.symbol.trim().toUpperCase(),
           quantity: parseInt(formData.quantity),
-          price_per_share: parseFloat(formData.price_per_share)
+          price_per_share: parseFloat(formData.price_per_share),
+          currency: formData.currency
         })
       })
       
@@ -160,7 +164,8 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
       transaction_type: 'buy',
       quantity: '',
       price_per_share: '',
-      transaction_date: new Date().toISOString().split('T')[0]
+      transaction_date: new Date().toISOString().split('T')[0],
+      currency: BASE_CURRENCY
     })
     setError('')
     setStockInfo(null)
@@ -229,13 +234,35 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
               <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
                 <p><strong>{stockInfo.symbol}</strong> - {stockInfo.company_name}</p>
                 {stockInfo.current_price && (
-                  <p>Current Price: ${stockInfo.current_price.toFixed(2)}</p>
+                  <p>
+                    Current Price: {getCurrencySymbol(BASE_CURRENCY)}{stockInfo.current_price.toFixed(2)}
+                  </p>
                 )}
               </div>
             )}
           </div>
 
-          {/* Transaction Type */}
+        {/* Currency */}
+        <div className="space-y-2">
+          <Label htmlFor="currency">Currency</Label>
+          <Select
+            value={formData.currency}
+            onValueChange={(value) => handleInputChange('currency', value)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="USD">USD</SelectItem>
+              <SelectItem value="EUR">EUR</SelectItem>
+              <SelectItem value="SEK">SEK</SelectItem>
+              <SelectItem value="GBP">GBP</SelectItem>
+              <SelectItem value="JPY">JPY</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Transaction Type */}
           <div className="space-y-2">
             <Label htmlFor="transaction_type">Transaction Type</Label>
             <Select
@@ -267,7 +294,9 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
 
           {/* Price per Share */}
           <div className="space-y-2">
-            <Label htmlFor="price_per_share">Price per Share ($)</Label>
+            <Label htmlFor="price_per_share">
+              Price per Share ({getCurrencySymbol(formData.currency)})
+            </Label>
             <Input
               id="price_per_share"
               type="number"
@@ -296,7 +325,8 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
             <div className="bg-gray-50 p-3 rounded">
               <p className="text-sm text-gray-600">Total Transaction Value:</p>
               <p className="text-lg font-semibold">
-                ${(parseInt(formData.quantity || 0) * parseFloat(formData.price_per_share || 0)).toLocaleString()}
+                {getCurrencySymbol(formData.currency)}
+                {(parseInt(formData.quantity || 0) * parseFloat(formData.price_per_share || 0)).toLocaleString()}
               </p>
             </div>
           )}
