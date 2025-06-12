@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog.jsx'
 import { Trash2, TrendingUp, TrendingDown } from 'lucide-react'
 
-const API_BASE_URL = 'http://localhost:5000/api/portfolio'
+const API_BASE_URL = import.meta.env.VITE_API_URL
 
 function TransactionHistory({ transactions, onTransactionDeleted }) {
   const [deletingTransaction, setDeletingTransaction] = useState(null)

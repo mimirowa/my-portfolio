@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge.jsx'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table.jsx'
 import { TrendingUp, TrendingDown, RefreshCw, ExternalLink } from 'lucide-react'
 
-const API_BASE_URL = 'http://localhost:5000/api/portfolio'
+const API_BASE_URL = import.meta.env.VITE_API_URL
 
 function StockHoldings({ portfolioData, onRefresh, loading }) {
   const [updatingStock, setUpdatingStock] = useState(null)
