@@ -107,6 +107,19 @@ The app will be available at the printed Vite dev server address (usually `http:
 | `GET /api/portfolio/summary` | Portfolio summary totals |
 | `GET /api/portfolio/stocks/search/<symbol>` | Search and add a stock |
 
+### User Management Endpoints
+
+| Method & Path | Description |
+|---------------|-------------|
+| `GET /api/users` | List all users |
+| `POST /api/users` | Create a new user |
+| `GET /api/users/<id>` | Retrieve a user by id |
+| `PUT /api/users/<id>` | Update user details |
+| `DELETE /api/users/<id>` | Remove a user |
+
+The HTML page used for quick testing of these endpoints has been moved to
+`docs/examples/user-api-demo.html`.
+
 ## Usage
 
 1. Start the backend and frontend using the steps above.
