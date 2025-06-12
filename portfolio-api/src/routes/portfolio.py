@@ -3,12 +3,9 @@ from src.models.user import db
 from src.models.portfolio import Stock, Transaction, CurrencyEnum, BASE_CURRENCY
 import requests
 from datetime import datetime, date, timedelta
-import sys
 import os
 
-# Add the API client path
-sys.path.append('/opt/.manus/.sandbox-runtime')
-from data_api import ApiClient
+from src.data_api import ApiClient
 
 portfolio_bp = Blueprint('portfolio', __name__)
 client = ApiClient()
