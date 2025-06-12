@@ -78,3 +78,43 @@ def test_currency_conversion(client, monkeypatch):
     assert summary.status_code == 200
     data = summary.get_json()
     assert round(data['total_cost_basis'], 2) == 220.0
+
+
+def test_portfolio_history(client, app):
+    t1 = {
+        'symbol': 'AAPL',
+        'transaction_type': 'buy',
+        'quantity': 1,
+        'price_per_share': 100.0,
+        'transaction_date': '2024-01-01'
+    }
+    t2 = {
+        'symbol': 'AAPL',
+        'transaction_type': 'buy',
+        'quantity': 1,
+        'price_per_share': 100.0,
+        'transaction_date': '2024-02-01'
+    }
+
+    client.post('/api/portfolio/transactions', json=t1)
+    client.post('/api/portfolio/transactions', json=t2)
+
+    with app.app_context():
+        from src.models.portfolio import Stock, db
+        stock = Stock.query.filter_by(symbol='AAPL').first()
+        stock.current_price = 110.0
+        db.session.commit()
+
+    resp = client.get('/api/portfolio/history?start=2024-01-01&end=2024-02-05')
+    assert resp.status_code == 200
+    data = resp.get_json()
+
+    expected_len = (date(2024, 2, 5) - date(2024, 1, 1)).days + 1
+    assert len(data) == expected_len
+
+    assert data[0]['date'] == '2024-01-01'
+    assert data[0]['with_contributions'] == 110.0
+    assert data[0]['market_value_only'] == 10.0
+
+    assert data[-1]['with_contributions'] == 220.0
+    assert data[-1]['market_value_only'] == 20.0
