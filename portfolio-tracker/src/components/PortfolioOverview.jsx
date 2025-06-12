@@ -1,6 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
+import { useState } from 'react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.jsx'
 import PortfolioHistoryChart from './PortfolioHistoryChart'
+import { sortPerformanceData } from '@/lib/sort.js'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C']
 
@@ -36,6 +39,10 @@ function PortfolioOverview({ portfolioData, portfolioSummary }) {
     gainPercent: stock.total_gain_percent,
     currentValue: stock.current_value
   }))
+
+  const [sortMetric, setSortMetric] = useState('current_value')
+
+  const sortedPerformanceData = sortPerformanceData(performanceData, sortMetric)
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -94,7 +101,7 @@ function PortfolioOverview({ portfolioData, portfolioSummary }) {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percentage }) => `${name} (${percentage}%)`}
+                  label={({ percentage }) => `${percentage}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
@@ -112,24 +119,35 @@ function PortfolioOverview({ portfolioData, portfolioSummary }) {
 
       {/* Performance Chart */}
       <Card>
-        <CardHeader>
-          <CardTitle>Performance by Stock</CardTitle>
-          <CardDescription>Gain/loss for each holding</CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle>Performance by Stock</CardTitle>
+            <CardDescription>Gain/loss for each holding</CardDescription>
+          </div>
+          <Select value={sortMetric} onValueChange={setSortMetric}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Sort By" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="current_value">Current Value</SelectItem>
+              <SelectItem value="total_gain">Total Gain</SelectItem>
+            </SelectContent>
+          </Select>
         </CardHeader>
         <CardContent>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={performanceData}>
+              <BarChart data={sortedPerformanceData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="symbol" />
                 <YAxis />
                 <Tooltip content={<PerformanceTooltip />} />
-                <Bar 
-                  dataKey="gain" 
+                <Bar
+                  dataKey="gain"
                   fill={(entry) => entry >= 0 ? '#10B981' : '#EF4444'}
                   name="Gain/Loss ($)"
                 >
-                  {performanceData.map((entry, index) => (
+                  {sortedPerformanceData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.gain >= 0 ? '#10B981' : '#EF4444'} />
                   ))}
                 </Bar>
