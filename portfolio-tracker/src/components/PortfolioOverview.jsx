@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
+import PortfolioHistoryChart from './PortfolioHistoryChart'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C']
 
@@ -77,6 +78,7 @@ function PortfolioOverview({ portfolioData, portfolioSummary }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <PortfolioHistoryChart />
       {/* Portfolio Allocation */}
       <Card>
         <CardHeader>

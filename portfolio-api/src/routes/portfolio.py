@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from src.models.user import db
 from src.models.portfolio import Stock, Transaction, CurrencyEnum, BASE_CURRENCY
 import requests
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import sys
 import os
 
@@ -318,5 +318,66 @@ def search_stock(symbol):
             
     except Exception as e:
         db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@portfolio_bp.route('/history', methods=['GET'])
+def get_portfolio_history():
+    """Return portfolio value history."""
+    try:
+        transactions = Transaction.query.order_by(Transaction.transaction_date).all()
+        if not transactions:
+            return jsonify([])
+
+        start_param = request.args.get('start')
+        end_param = request.args.get('end')
+
+        start_date = transactions[0].transaction_date
+        if start_param:
+            start_date = datetime.strptime(start_param, '%Y-%m-%d').date()
+
+        end_date = date.today()
+        if end_param:
+            end_date = datetime.strptime(end_param, '%Y-%m-%d').date()
+
+        if start_date > end_date:
+            return jsonify({'error': 'start date must be before end date'}), 400
+
+        stocks = {stock.id: stock for stock in Stock.query.all()}
+
+        history = []
+        holdings = {sid: 0 for sid in stocks}
+        contributions = 0.0
+
+        idx = 0
+        current = start_date
+        while current <= end_date:
+            while idx < len(transactions) and transactions[idx].transaction_date <= current:
+                t = transactions[idx]
+                if t.transaction_type == 'buy':
+                    holdings[t.stock_id] = holdings.get(t.stock_id, 0) + t.quantity
+                    contributions += t.quantity * t.price_per_share * t.fx_rate
+                else:
+                    holdings[t.stock_id] = holdings.get(t.stock_id, 0) - t.quantity
+                    contributions -= t.quantity * t.price_per_share * t.fx_rate
+                idx += 1
+
+            market_value = 0.0
+            for sid, qty in holdings.items():
+                if qty:
+                    price = stocks[sid].current_price or 0
+                    market_value += qty * price
+
+            history.append({
+                'date': current.isoformat(),
+                'market_value_only': round(market_value - contributions, 2),
+                'with_contributions': round(market_value, 2)
+            })
+
+            current += timedelta(days=1)
+
+        return jsonify(history)
+
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
 
