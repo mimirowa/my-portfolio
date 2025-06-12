@@ -34,6 +34,8 @@ BASE_CURRENCY=USD python portfolio-api/src/main.py
 If these variables are not set, the app uses default values defined in `main.py`.
 `BASE_CURRENCY` defaults to `USD`. When adding transactions in other currencies, the API fetches historical exchange rates. Set `EXCHANGE_API_KEY` if your exchange rate provider requires authentication.
 
+The backend uses a minimal `ApiClient` located in `portfolio-api/src/data_api.py` for fetching stock data. Configure `DATA_API_BASE_URL` and optionally `DATA_API_KEY` if you want to enable live price lookups.
+
 # My Portfolio
 
 This repository contains a Flask API and a React front-end for tracking investment portfolios.
