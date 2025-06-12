@@ -48,6 +48,27 @@ This project combines a Flask-based backend API with a modern React frontend to 
 - Transaction history with delete confirmation
 - Summary cards showing total value and gains
 
+## Technology Stack
+
+**Frontend**
+
+- React 19.1.0
+- Vite 6.3.5
+- Tailwind CSS 4.1.7
+- shadcn/ui
+- Recharts 2.15.3
+- Lucide React 0.510.0
+- PNPM 10 for package management
+
+**Backend**
+
+- Python 3.12
+- Flask 3.1.1
+- Flask-SQLAlchemy 3.1.1
+- SQLAlchemy 2.0
+- Flask-CORS 6.0.0
+- SQLite
+
 ## Directory Structure
 
 ```
