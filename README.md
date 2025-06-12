@@ -121,3 +121,7 @@ The app will be available at the printed Vite dev server address (usually `http:
 4. Update prices periodically using the "Update Prices" button or the corresponding API endpoint.
 
 Happy investing!
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
