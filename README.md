@@ -1,3 +1,10 @@
+
+# My Portfolio
+
+This repository contains a Flask API and a React front-end for tracking investment portfolios.
+
+The API stores its data in an SQLite database located at `portfolio-api/src/database/app.db`. This file is created automatically at runtime when the server starts, so it should not be committed to version control.
+
 # Portfolio Tracker
 
 This project combines a Flask-based backend API with a modern React frontend to help track stock investments. It allows you to record buy/sell transactions, fetch current prices, and visualize portfolio performance.
