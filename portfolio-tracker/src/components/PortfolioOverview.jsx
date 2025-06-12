@@ -36,7 +36,7 @@ function PortfolioOverview({ portfolioData, portfolioSummary }) {
     currentValue: stock.current_value
   }))
 
-  const CustomTooltip = ({ active, payload, label }) => {
+  const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
@@ -54,7 +54,7 @@ function PortfolioOverview({ portfolioData, portfolioSummary }) {
     return null
   }
 
-  const PerformanceTooltip = ({ active, payload, label }) => {
+  const PerformanceTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (

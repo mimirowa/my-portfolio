@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog.jsx'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
@@ -21,6 +21,31 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
   const [searchingStock, setSearchingStock] = useState(false)
   const [error, setError] = useState('')
   const [stockInfo, setStockInfo] = useState(null)
+  const [suggestions, setSuggestions] = useState([])
+
+  useEffect(() => {
+    const query = formData.symbol.trim()
+    if (!query) {
+      setSuggestions([])
+      return
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/stocks/search/${query}`)
+        if (res.ok) {
+          const data = await res.json()
+          setSuggestions(Array.isArray(data) ? data : [data])
+        } else {
+          setSuggestions([])
+        }
+      } catch {
+        setSuggestions([])
+      }
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
+  }, [formData.symbol])
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -32,14 +57,15 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
     if (error) setError('')
   }
 
-  const searchStock = async () => {
-    if (!formData.symbol.trim()) return
+  const searchStock = async (symbolOverride) => {
+    const searchSymbol = (symbolOverride || formData.symbol).trim()
+    if (!searchSymbol) return
     
     try {
       setSearchingStock(true)
       setError('')
       
-      const response = await fetch(`${API_BASE_URL}/stocks/search/${formData.symbol.trim()}`)
+      const response = await fetch(`${API_BASE_URL}/stocks/search/${searchSymbol}`)
       
       if (response.ok) {
         const stockData = await response.json()
@@ -57,12 +83,19 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
         setError(errorData.error || 'Stock not found')
         setStockInfo(null)
       }
-    } catch (error) {
+  } catch (err) {
+      console.error('Error searching for stock', err)
       setError('Error searching for stock')
       setStockInfo(null)
     } finally {
       setSearchingStock(false)
     }
+  }
+
+  const handleSuggestionSelect = (symbol) => {
+    setFormData(prev => ({ ...prev, symbol }))
+    setSuggestions([])
+    searchStock(symbol)
   }
 
   const handleSubmit = async (e) => {
@@ -113,7 +146,8 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
         const errorData = await response.json()
         setError(errorData.error || 'Failed to add transaction')
       }
-    } catch (error) {
+  } catch (err) {
+      console.error('Error adding transaction', err)
       setError('Error adding transaction')
     } finally {
       setLoading(false)
@@ -130,6 +164,7 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
     })
     setError('')
     setStockInfo(null)
+    setSuggestions([])
     onClose()
   }
 
@@ -153,13 +188,14 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
           {/* Stock Symbol */}
           <div className="space-y-2">
             <Label htmlFor="symbol">Stock Symbol</Label>
-            <div className="flex gap-2">
+            <div className="relative flex gap-2">
               <Input
                 id="symbol"
                 placeholder="e.g., AAPL"
                 value={formData.symbol}
                 onChange={(e) => handleInputChange('symbol', e.target.value.toUpperCase())}
                 className="flex-1"
+                autoComplete="off"
               />
               <Button
                 type="button"
@@ -174,6 +210,20 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
                   <Search className="h-4 w-4" />
                 )}
               </Button>
+              {suggestions.length > 0 && (
+                <ul className="absolute top-full left-0 z-10 mt-1 w-full max-h-40 overflow-auto rounded border bg-white text-sm shadow">
+                  {suggestions.map((s) => (
+                    <li
+                      key={s.symbol}
+                      className="cursor-pointer px-2 py-1 hover:bg-gray-100"
+                      onClick={() => handleSuggestionSelect(s.symbol)}
+                    >
+                      <strong>{s.symbol}</strong>
+                      {s.company_name ? ` - ${s.company_name}` : ''}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
             {stockInfo && (
               <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
