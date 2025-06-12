@@ -9,6 +9,7 @@ from src.models.user import db
 from src.models.portfolio import Stock, Transaction
 from src.routes.user import user_bp
 from src.routes.portfolio import portfolio_bp
+from src.config import SQLALCHEMY_DATABASE_URI
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
 # Allow SECRET_KEY to be configured via environment variable for flexibility
@@ -22,8 +23,7 @@ app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(portfolio_bp, url_prefix='/api/portfolio')
 
 # uncomment if you need to use database
-default_db = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', default_db)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', SQLALCHEMY_DATABASE_URI)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 with app.app_context():
