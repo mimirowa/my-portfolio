@@ -9,6 +9,7 @@ from src.models.user import db
 from src.models.portfolio import Stock, Transaction
 from src.routes.user import user_bp
 from src.routes.portfolio import portfolio_bp
+from src.routes.import_routes import import_bp
 from src.config import SQLALCHEMY_DATABASE_URI
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
@@ -21,6 +22,7 @@ CORS(app)
 
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(portfolio_bp, url_prefix='/api/portfolio')
+app.register_blueprint(import_bp, url_prefix='/api/import')
 
 # uncomment if you need to use database
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', SQLALCHEMY_DATABASE_URI)

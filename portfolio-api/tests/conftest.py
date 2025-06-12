@@ -11,6 +11,7 @@ from flask import Flask
 from src.models.user import db
 from src.routes.user import user_bp
 from src.routes.portfolio import portfolio_bp
+from src.routes.import_routes import import_bp
 
 @pytest.fixture
 def app():
@@ -24,6 +25,7 @@ def app():
         db.create_all()
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(portfolio_bp, url_prefix='/api/portfolio')
+    app.register_blueprint(import_bp, url_prefix='/api/import')
     yield app
 
 @pytest.fixture
