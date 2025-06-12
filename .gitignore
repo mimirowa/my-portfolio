@@ -1,0 +1,17 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+
+# Node
+node_modules/
+dist/
+
+# Environment
+.env
+
+# Databases
+*.db
+
+# Misc
+.DS_Store
