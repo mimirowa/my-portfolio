@@ -121,3 +121,12 @@ The app will be available at the printed Vite dev server address (usually `http:
 4. Update prices periodically using the "Update Prices" button or the corresponding API endpoint.
 
 Happy investing!
+
+## Running Tests
+
+Install the test requirements and run pytest:
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
