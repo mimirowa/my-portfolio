@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from src.models.user import db
-from src.models.portfolio import Stock, Transaction
+from src.models.portfolio import Stock, Transaction, CurrencyEnum, BASE_CURRENCY
+import requests
 from datetime import datetime, date
 import sys
 import os
@@ -36,7 +37,7 @@ def get_all_stocks():
             
             if current_quantity > 0:  # Only include stocks we currently own
                 # Calculate average cost basis
-                total_cost = sum(t.quantity * t.price_per_share for t in buy_transactions)
+                total_cost = sum(t.quantity * t.price_per_share * t.fx_rate for t in buy_transactions)
                 avg_cost_basis = total_cost / total_bought if total_bought > 0 else 0
                 
                 # Calculate current value and gains
@@ -137,7 +138,12 @@ def add_transaction():
                 return jsonify({'error': f'Missing required field: {field}'}), 400
         
         symbol = data['symbol'].upper()
-        
+
+        base_currency = os.environ.get('BASE_CURRENCY', BASE_CURRENCY)
+        currency = data.get('currency', base_currency).upper()
+        if currency not in CurrencyEnum.__members__:
+            return jsonify({'error': 'Unsupported currency'}), 400
+
         # Get or create stock
         stock = Stock.query.filter_by(symbol=symbol).first()
         if not stock:
@@ -151,12 +157,26 @@ def add_transaction():
         except ValueError:
             return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
         
-        # Create transaction
+        fx_rate = 1.0
+        if currency != base_currency:
+            try:
+                resp = requests.get(
+                    f"https://api.exchangerate.host/{transaction_date.isoformat()}",
+                    params={"base": currency, "symbols": base_currency},
+                    timeout=10,
+                )
+                data_fx = resp.json()
+                fx_rate = data_fx['rates'][base_currency]
+            except Exception:
+                return jsonify({'error': 'Failed to fetch FX rate'}), 500
+
         transaction = Transaction(
             stock_id=stock.id,
             transaction_type=data['transaction_type'].lower(),
             quantity=int(data['quantity']),
             price_per_share=float(data['price_per_share']),
+            currency=CurrencyEnum[currency],
+            fx_rate=fx_rate,
             transaction_date=transaction_date
         )
         
@@ -221,7 +241,7 @@ def get_portfolio_summary():
                         break
                     
                     shares_to_use = min(remaining_quantity, transaction.quantity)
-                    cost_basis += shares_to_use * transaction.price_per_share
+                    cost_basis += shares_to_use * transaction.price_per_share * transaction.fx_rate
                     remaining_quantity -= shares_to_use
                 
                 current_value = current_quantity * (stock.current_price or 0)

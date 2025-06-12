@@ -22,13 +22,15 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-The API reads a `SECRET_KEY` and a `DATABASE_URL` from the environment. You can provide them when running the app, e.g.:
-
+The API reads a `SECRET_KEY`, a `DATABASE_URL` and a `BASE_CURRENCY` from the environment. You can
+provide them when running the app, e.g.:
 ```bash
-SECRET_KEY=your-secret-key DATABASE_URL=sqlite:///path/to/app.db python portfolio-api/src/main.py
+SECRET_KEY=your-secret-key DATABASE_URL=sqlite:///path/to/app.db \
+BASE_CURRENCY=USD python portfolio-api/src/main.py
 ```
 
 If these variables are not set, the app uses default values defined in `main.py`.
+`BASE_CURRENCY` defaults to `USD`. When adding transactions in other currencies, the API fetches historical exchange rates. Set `EXCHANGE_API_KEY` if your exchange rate provider requires authentication.
 
 # My Portfolio
 

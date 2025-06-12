@@ -1,6 +1,17 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from src.models.user import db
+import enum
+import os
+
+BASE_CURRENCY = os.environ.get("BASE_CURRENCY", "USD")
+
+class CurrencyEnum(enum.Enum):
+    USD = "USD"
+    EUR = "EUR"
+    SEK = "SEK"
+    GBP = "GBP"
+    JPY = "JPY"
 
 class Stock(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -30,6 +41,8 @@ class Transaction(db.Model):
     transaction_type = db.Column(db.String(10), nullable=False)  # 'buy' or 'sell'
     quantity = db.Column(db.Integer, nullable=False)
     price_per_share = db.Column(db.Float, nullable=False)
+    currency = db.Column(db.Enum(CurrencyEnum), nullable=False, default=BASE_CURRENCY)
+    fx_rate = db.Column(db.Float, nullable=False, default=1.0)  # rate to convert to base currency
     transaction_date = db.Column(db.Date, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -44,7 +57,10 @@ class Transaction(db.Model):
             'transaction_type': self.transaction_type,
             'quantity': self.quantity,
             'price_per_share': self.price_per_share,
+            'currency': self.currency.value,
+            'fx_rate': self.fx_rate,
             'total_value': self.quantity * self.price_per_share,
+            'total_value_base': self.total_value_base,
             'transaction_date': self.transaction_date.isoformat() if self.transaction_date else None,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
@@ -52,4 +68,8 @@ class Transaction(db.Model):
     @property
     def total_value(self):
         return self.quantity * self.price_per_share
+
+    @property
+    def total_value_base(self):
+        return self.quantity * self.price_per_share * self.fx_rate
 

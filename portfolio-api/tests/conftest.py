@@ -14,6 +14,7 @@ from src.routes.portfolio import portfolio_bp
 
 @pytest.fixture
 def app():
+    os.environ.setdefault('BASE_CURRENCY', 'USD')
     app = Flask(__name__)
     app.config['TESTING'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
