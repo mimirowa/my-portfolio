@@ -1,5 +1,86 @@
+
 # My Portfolio
 
 This repository contains a Flask API and a React front-end for tracking investment portfolios.
 
 The API stores its data in an SQLite database located at `portfolio-api/src/database/app.db`. This file is created automatically at runtime when the server starts, so it should not be committed to version control.
+
+# Portfolio Tracker
+
+This project combines a Flask-based backend API with a modern React frontend to help track stock investments. It allows you to record buy/sell transactions, fetch current prices, and visualize portfolio performance.
+
+## Features
+
+- Manage stock transactions and holdings
+- Update prices from Yahoo Finance
+- Overview charts for allocation and performance
+- Transaction history with delete confirmation
+- Summary cards showing total value and gains
+
+## Directory Structure
+
+```
+my-portfolio/
+├── portfolio-api/        # Flask backend
+│   ├── requirements.txt
+│   └── src/
+│       ├── main.py       # Application entry
+│       ├── models/       # SQLAlchemy models
+│       ├── routes/       # API routes
+│       └── static/       # Built frontend output
+├── portfolio-tracker/    # React frontend (Vite)
+│   ├── public/
+│   ├── src/
+│   ├── package.json
+│   └── vite.config.js
+└── requirements.txt      # Points to backend requirements
+```
+
+## Backend Setup
+
+```bash
+cd portfolio-api
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python src/main.py
+```
+
+The API will start on `http://localhost:5000`.
+
+## Frontend Setup
+
+```bash
+cd portfolio-tracker
+pnpm install
+pnpm run dev
+```
+
+The app will be available at the printed Vite dev server address (usually `http://localhost:5173`).
+
+## Key API Endpoints
+
+| Method & Path | Description |
+|---------------|-------------|
+| `GET /api/users` | List all users |
+| `POST /api/users` | Create a new user |
+| `GET /api/users/<id>` | Get a specific user |
+| `PUT /api/users/<id>` | Update a user |
+| `DELETE /api/users/<id>` | Delete a user |
+| `GET /api/portfolio/stocks` | Get all portfolio stocks |
+| `GET /api/portfolio/stocks/<symbol>` | Get stock details |
+| `POST /api/portfolio/stocks/<symbol>/price` | Refresh a stock price |
+| `GET /api/portfolio/transactions` | List all transactions |
+| `POST /api/portfolio/transactions` | Add a transaction |
+| `DELETE /api/portfolio/transactions/<id>` | Delete a transaction |
+| `GET /api/portfolio/summary` | Portfolio summary totals |
+| `GET /api/portfolio/stocks/search/<symbol>` | Search and add a stock |
+
+## Usage
+
+1. Start the backend and frontend using the steps above.
+2. Use the web interface to add transactions and view holdings.
+3. Call the API directly (e.g., using `curl` or Postman) to integrate with other tools.
+4. Update prices periodically using the "Update Prices" button or the corresponding API endpoint.
+
+Happy investing!
