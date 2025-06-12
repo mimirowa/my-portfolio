@@ -14,33 +14,29 @@ VITE_BASE_CURRENCY=USD
 `VITE_API_URL` should point to the portfolio API base URL.
 `VITE_BASE_CURRENCY` sets the default currency shown in the UI.
 
-## Example setup
+## Getting Started
 
-Create a virtual environment and install dependencies:
+This project requires **Node.js 20** and **Python 3.11+**.
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+# frontend
+cd portfolio-tracker && npm install && npm run build
+
+# backend
+cd ../portfolio-api
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
+uvicorn src.main:app --reload
 ```
 
-The API reads a `SECRET_KEY`, a `DATABASE_URL` and a `BASE_CURRENCY` from the environment. You can
-provide them when running the app, e.g.:
-```bash
-SECRET_KEY=your-secret-key DATABASE_URL=sqlite:///path/to/app.db \
-BASE_CURRENCY=USD python portfolio-api/src/main.py
-```
-
-If these variables are not set, the app uses default values defined in `main.py`.
-`BASE_CURRENCY` defaults to `USD`. When adding transactions in other currencies, the API fetches historical exchange rates. Set `EXCHANGE_API_KEY` if your exchange rate provider requires authentication.
-
-The backend uses a minimal `ApiClient` located in `portfolio-api/src/data_api.py` for fetching stock data. Configure `DATA_API_BASE_URL` and optionally `DATA_API_KEY` if you want to enable live price lookups.
+The API reads optional environment variables like `SECRET_KEY`, `DATABASE_URL` and `BASE_CURRENCY`. Default values are provided so it will start without extra configuration. Historical price lookups use the minimal `ApiClient` in `portfolio-api/src/data_api.py`.
 
 # My Portfolio
 
 This repository contains a Flask API and a React front-end for tracking investment portfolios.
 
-The API stores its data in an SQLite database located at `portfolio-api/src/database/app.db`. This file is created automatically at runtime when the server starts, so it should not be committed to version control.
+The API stores its data in an SQLite database located at `portfolio-api/data/portfolio.db`. This folder is created automatically when the server starts, so it should not be committed to version control.
 
 # Portfolio Tracker
 
