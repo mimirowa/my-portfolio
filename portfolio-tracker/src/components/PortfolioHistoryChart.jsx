@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Switch } from '@/components/ui/switch.jsx'
-
-const API_BASE_URL = import.meta.env.VITE_API_URL
+import { get } from '@/lib/api'
 
 function PortfolioHistoryChart() {
   const [history, setHistory] = useState([])
@@ -12,7 +11,7 @@ function PortfolioHistoryChart() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const resp = await fetch(`${API_BASE_URL}/history`)
+        const resp = await get('/history')
         if (resp.ok) {
           const data = await resp.json()
           setHistory(data)

@@ -5,8 +5,8 @@ import { Badge } from '@/components/ui/badge.jsx'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table.jsx'
 import { TrendingUp, TrendingDown, RefreshCw, ExternalLink } from 'lucide-react'
 import { getCurrencySymbol } from '@/lib/utils.js'
+import { post } from '@/lib/api'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL
 const BASE_CURRENCY = import.meta.env.VITE_BASE_CURRENCY || 'USD'
 
 function StockHoldings({ portfolioData, onRefresh, loading }) {
@@ -15,9 +15,7 @@ function StockHoldings({ portfolioData, onRefresh, loading }) {
   const updateSingleStockPrice = async (symbol) => {
     try {
       setUpdatingStock(symbol)
-      const response = await fetch(`${API_BASE_URL}/stocks/${symbol}/price`, {
-        method: 'POST'
-      })
+      const response = await post(`/stocks/${symbol}/price`, {})
       
       if (response.ok) {
         onRefresh()

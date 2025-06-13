@@ -8,8 +8,7 @@ import { Trash2, TrendingUp, TrendingDown } from 'lucide-react'
 import { getCurrencySymbol } from '@/lib/utils.js'
 import ImportDialog from '@/components/ImportDialog'
 import AddTransactionButton from '@/components/AddTransactionButton'
-
-const API_BASE_URL = import.meta?.env?.VITE_API_URL || ''
+import { API_BASE_URL } from '@/lib/api'
 const BASE_CURRENCY = import.meta?.env?.VITE_BASE_CURRENCY || 'USD'
 
 function TransactionHistory({ transactions, onTransactionDeleted, onTransactionAdded }) {

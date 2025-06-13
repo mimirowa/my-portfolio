@@ -9,8 +9,7 @@ import StockHoldings from './components/StockHoldings'
 import TransactionHistory from './components/TransactionHistory'
 import Footer from './components/Footer'
 import './App.css'
-
-const API_BASE_URL = import.meta.env.VITE_API_URL
+import { get, post } from '@/lib/api'
 
 function App() {
   const [portfolioData, setPortfolioData] = useState([])
@@ -22,9 +21,9 @@ function App() {
     try {
       setLoading(true)
       const [stocksResponse, summaryResponse, transactionsResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/stocks`),
-        fetch(`${API_BASE_URL}/portfolio/summary`),
-        fetch(`${API_BASE_URL}/transactions`)
+        get('/stocks'),
+        get('/portfolio/summary'),
+        get('/transactions')
       ])
 
       if (stocksResponse.ok) {
@@ -52,9 +51,7 @@ function App() {
     try {
       setLoading(true)
       for (const stock of portfolioData) {
-        await fetch(`${API_BASE_URL}/stocks/${stock.symbol}/price`, {
-          method: 'POST'
-        })
+        await post(`/stocks/${stock.symbol}/price`, {})
       }
       await fetchPortfolioData()
     } catch (error) {
