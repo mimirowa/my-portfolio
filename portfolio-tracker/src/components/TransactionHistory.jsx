@@ -6,12 +6,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog.jsx'
 import { Trash2, TrendingUp, TrendingDown } from 'lucide-react'
 import { getCurrencySymbol } from '@/lib/utils.js'
+import ImportDialog from '@/components/ImportDialog'
+import AddTransactionButton from '@/components/AddTransactionButton'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL
-const BASE_CURRENCY = import.meta.env.VITE_BASE_CURRENCY || 'USD'
+const API_BASE_URL = import.meta?.env?.VITE_API_URL || ''
+const BASE_CURRENCY = import.meta?.env?.VITE_BASE_CURRENCY || 'USD'
 
-function TransactionHistory({ transactions, onTransactionDeleted }) {
+function TransactionHistory({ transactions, onTransactionDeleted, onTransactionAdded }) {
   const [deletingTransaction, setDeletingTransaction] = useState(null)
+  const [showImport, setShowImport] = useState(false)
 
   const deleteTransaction = async (transactionId) => {
     try {
@@ -33,9 +36,17 @@ function TransactionHistory({ transactions, onTransactionDeleted }) {
   if (!transactions || transactions.length === 0) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>Transaction History</CardTitle>
-          <CardDescription>All your buy and sell transactions</CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle>Transaction History</CardTitle>
+            <CardDescription>All your buy and sell transactions</CardDescription>
+          </div>
+          <div className="flex gap-2 flex-nowrap justify-end">
+            <Button onClick={() => setShowImport(true)} variant="outline">
+              Import ▼ Google Finance
+            </Button>
+            <AddTransactionButton onTransactionAdded={onTransactionAdded} />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-gray-500">
@@ -43,15 +54,28 @@ function TransactionHistory({ transactions, onTransactionDeleted }) {
             <p className="text-sm mt-2">Add your first transaction to get started</p>
           </div>
         </CardContent>
+        <ImportDialog
+          open={showImport}
+          onOpenChange={setShowImport}
+          onImported={onTransactionAdded}
+        />
       </Card>
     )
   }
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Transaction History</CardTitle>
-        <CardDescription>All your buy and sell transactions</CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between">
+        <div>
+          <CardTitle>Transaction History</CardTitle>
+          <CardDescription>All your buy and sell transactions</CardDescription>
+        </div>
+        <div className="flex gap-2 flex-nowrap justify-end">
+          <Button onClick={() => setShowImport(true)} variant="outline">
+            Import ▼ Google Finance
+          </Button>
+          <AddTransactionButton onTransactionAdded={onTransactionAdded} />
+        </div>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
@@ -169,6 +193,11 @@ function TransactionHistory({ transactions, onTransactionDeleted }) {
           </div>
         </div>
       </CardContent>
+      <ImportDialog
+        open={showImport}
+        onOpenChange={setShowImport}
+        onImported={onTransactionAdded}
+      />
     </Card>
   )
 }

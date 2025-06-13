@@ -8,8 +8,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert.jsx'
 import { Loader2, Search } from 'lucide-react'
 import { getCurrencySymbol } from '@/lib/utils.js'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL
-const BASE_CURRENCY = import.meta.env.VITE_BASE_CURRENCY || 'USD'
+const API_BASE_URL = import.meta?.env?.VITE_API_URL || ''
+const BASE_CURRENCY = import.meta?.env?.VITE_BASE_CURRENCY || 'USD'
 
 function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
   const [formData, setFormData] = useState({
