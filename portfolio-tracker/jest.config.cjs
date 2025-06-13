@@ -8,5 +8,5 @@ module.exports = {
   },
   setupFilesAfterEnv: ['<rootDir>/tests/setup-tests.js'],
   testMatch: ['<rootDir>/tests/**/*.test.{js,ts,jsx,tsx}'],
-  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  extensionsToTreatAsEsm: ['.ts', '.tsx', '.jsx'],
 };

@@ -212,9 +212,10 @@ function App() {
           </TabsContent>
 
           <TabsContent value="transactions" className="space-y-6">
-            <TransactionHistory 
+            <TransactionHistory
               transactions={transactions}
               onTransactionDeleted={handleTransactionDeleted}
+              onTransactionAdded={handleTransactionAdded}
             />
           </TabsContent>
         </Tabs>
