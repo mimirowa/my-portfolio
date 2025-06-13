@@ -1,6 +1,8 @@
 # Python
 venv/
+# Ignore Python byte-code
 __pycache__/
+*.pyc
 *.py[cod]
 
 # Node
