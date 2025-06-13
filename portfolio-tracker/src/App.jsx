@@ -8,6 +8,7 @@ import PortfolioOverview from './components/PortfolioOverview'
 import StockHoldings from './components/StockHoldings'
 import TransactionHistory from './components/TransactionHistory'
 import AddTransactionModal from './components/AddTransactionModal'
+import Footer from './components/Footer'
 import './App.css'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL
@@ -224,6 +225,7 @@ function App() {
           onClose={() => setIsAddTransactionOpen(false)}
           onTransactionAdded={handleTransactionAdded}
         />
+        <Footer />
       </div>
     </div>
   )
