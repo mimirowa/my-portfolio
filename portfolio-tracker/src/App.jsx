@@ -9,7 +9,7 @@ import StockHoldings from './components/StockHoldings'
 import TransactionHistory from './components/TransactionHistory'
 import Footer from './components/Footer'
 import './App.css'
-import { get, post } from '@/lib/api'
+import { getStocks, getSummary, getTransactions, post } from '@/lib/api'
 
 function App() {
   const [portfolioData, setPortfolioData] = useState([])
@@ -20,27 +20,15 @@ function App() {
   const fetchPortfolioData = async () => {
     try {
       setLoading(true)
-      const [stocksResponse, summaryResponse, transactionsResponse] = await Promise.all([
-        get('/stocks'),
-        get('/summary'),
-        get('/portfolio/summary'),
-        get('/transactions')
+      const [stocks, summary, transactions] = await Promise.all([
+        getStocks(),
+        getSummary(),
+        getTransactions()
       ])
 
-      if (stocksResponse.ok) {
-        const stocksData = await stocksResponse.json()
-        setPortfolioData(stocksData)
-      }
-
-      if (summaryResponse.ok) {
-        const summaryData = await summaryResponse.json()
-        setPortfolioSummary(summaryData)
-      }
-
-      if (transactionsResponse.ok) {
-        const transactionsData = await transactionsResponse.json()
-        setTransactions(transactionsData)
-      }
+      setPortfolioData(stocks)
+      setPortfolioSummary(summary)
+      setTransactions(transactions)
     } catch (error) {
       console.error('Error fetching portfolio data:', error)
     } finally {
