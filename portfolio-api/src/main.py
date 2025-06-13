@@ -13,12 +13,11 @@ from src.routes.import_routes import import_bp
 from src.config import SQLALCHEMY_DATABASE_URI
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
+# Enable CORS for all API routes
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 # Allow SECRET_KEY to be configured via environment variable for flexibility
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'asdf#FGSgvasgf$5$WGT')
 app.config['BASE_CURRENCY'] = os.environ.get('BASE_CURRENCY', 'USD')
-
-# Enable CORS for all API routes
-CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(portfolio_bp, url_prefix='/api/portfolio')
