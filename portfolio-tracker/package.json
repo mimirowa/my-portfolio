@@ -72,12 +72,9 @@
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.4.1",
-<<<<<<< codex/fix-invisible-import-button-on-transactions-page
     "babel-jest": "^30.0.0",
     "babel-plugin-transform-import-meta": "^2.3.3",
-=======
     "cross-env": "^7.0.3",
->>>>>>> main
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
