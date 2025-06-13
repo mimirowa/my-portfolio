@@ -4,7 +4,7 @@ This repository contains a Flask backend (`portfolio-api`) and a React frontend 
 
 ## Environment Variables
 
-The front-end uses Vite environment variables. Copy `.env.example` in `portfolio-tracker` to `.env` and update the values as needed.
+The front-end uses Vite environment variables. Copy `.env.local.example` in `portfolio-tracker` to `.env.local` and update the values as needed.
 
 ```
 VITE_API_URL=http://localhost:5000/api/portfolio
@@ -20,7 +20,7 @@ This project requires **Node.js 20** and **Python 3.11+**.
 
 ```bash
 # frontend
-cd portfolio-tracker && npm install && npm run build
+cd portfolio-tracker && cp .env.local.example .env.local && npm install && npm run dev
 
 # backend
 cd ../portfolio-api
