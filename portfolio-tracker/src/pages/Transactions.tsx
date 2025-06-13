@@ -22,9 +22,9 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end gap-2">
+      <div className="flex gap-2 flex-nowrap justify-end">
         <Button onClick={() => setShowImport(true)} variant="outline">
-          Import ▸ Google Finance
+          Import ▼ Google Finance
         </Button>
         <Button onClick={() => setShowAdd(true)}>Add Transaction</Button>
       </div>
