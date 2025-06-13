@@ -203,7 +203,7 @@ def delete_transaction(transaction_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@portfolio_bp.route('/portfolio/summary', methods=['GET'])
+@portfolio_bp.route('/summary', methods=['GET'])
 def get_portfolio_summary():
     """Get portfolio summary with total value, gains, etc."""
     try:

@@ -22,6 +22,7 @@ function App() {
       setLoading(true)
       const [stocksResponse, summaryResponse, transactionsResponse] = await Promise.all([
         get('/stocks'),
+        get('/summary'),
         get('/portfolio/summary'),
         get('/transactions')
       ])

@@ -8,6 +8,7 @@ import { Trash2, TrendingUp, TrendingDown } from 'lucide-react'
 import { getCurrencySymbol } from '@/lib/utils.js'
 import ImportDialog from '@/components/ImportDialog'
 import AddTransactionButton from '@/components/AddTransactionButton'
+import { del } from '@/lib/api'
 import { API_BASE_URL } from '@/lib/api'
 const BASE_CURRENCY = import.meta?.env?.VITE_BASE_CURRENCY || 'USD'
 
@@ -18,9 +19,7 @@ function TransactionHistory({ transactions, onTransactionDeleted, onTransactionA
   const deleteTransaction = async (transactionId) => {
     try {
       setDeletingTransaction(transactionId)
-      const response = await fetch(`${API_BASE_URL}/transactions/${transactionId}`, {
-        method: 'DELETE'
-      })
+      const response = await del(`/transactions/${transactionId}`)
       
       if (response.ok) {
         onTransactionDeleted()
