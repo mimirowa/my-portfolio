@@ -7,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert.jsx'
 import { Loader2, Search } from 'lucide-react'
 import { getCurrencySymbol } from '@/lib/utils.js'
+import { get, post } from '@/lib/api'
 
-const API_BASE_URL = import.meta?.env?.VITE_API_URL || ''
 const BASE_CURRENCY = import.meta?.env?.VITE_BASE_CURRENCY || 'USD'
 
 function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
@@ -35,7 +35,7 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
 
     const timeoutId = setTimeout(async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/stocks/search/${query}`)
+        const res = await get(`/stocks/search/${query}`)
         if (res.ok) {
           const data = await res.json()
           setSuggestions(Array.isArray(data) ? data : [data])
@@ -68,7 +68,7 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
       setSearchingStock(true)
       setError('')
       
-      const response = await fetch(`${API_BASE_URL}/stocks/search/${searchSymbol}`)
+      const response = await get(`/stocks/search/${searchSymbol}`)
       
       if (response.ok) {
         const stockData = await response.json()
@@ -129,18 +129,12 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
       setLoading(true)
       setError('')
       
-      const response = await fetch(`${API_BASE_URL}/transactions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...formData,
-          symbol: formData.symbol.trim().toUpperCase(),
-          quantity: parseInt(formData.quantity),
-          price_per_share: parseFloat(formData.price_per_share),
-          currency: formData.currency
-        })
+      const response = await post('/transactions', {
+        ...formData,
+        symbol: formData.symbol.trim().toUpperCase(),
+        quantity: parseInt(formData.quantity),
+        price_per_share: parseFloat(formData.price_per_share),
+        currency: formData.currency
       })
       
       if (response.ok) {

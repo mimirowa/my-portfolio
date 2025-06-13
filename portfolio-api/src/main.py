@@ -17,8 +17,8 @@ app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'sta
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'asdf#FGSgvasgf$5$WGT')
 app.config['BASE_CURRENCY'] = os.environ.get('BASE_CURRENCY', 'USD')
 
-# Enable CORS for all routes
-CORS(app)
+# Enable CORS for all API routes
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(portfolio_bp, url_prefix='/api/portfolio')
