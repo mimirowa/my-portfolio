@@ -74,7 +74,7 @@ def test_currency_conversion(client, monkeypatch):
     client.post('/api/portfolio/transactions', json=usd)
     client.post('/api/portfolio/transactions', json=eur)
 
-    summary = client.get('/api/portfolio/portfolio/summary')
+    summary = client.get('/api/portfolio/summary')
     assert summary.status_code == 200
     data = summary.get_json()
     assert round(data['total_cost_basis'], 2) == 220.0
