@@ -7,7 +7,7 @@ This repository contains a Flask backend (`portfolio-api`) and a React frontend 
 The front-end uses Vite environment variables. Copy `.env.local.example` in `portfolio-tracker` to `.env.local` and update the values as needed.
 
 ```
-VITE_API_URL=http://localhost:5000/api/portfolio
+VITE_API_URL=http://localhost:8000/api
 VITE_BASE_CURRENCY=USD
 ```
 
