@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert.jsx'
 import { Loader2, Search } from 'lucide-react'
 import { getCurrencySymbol } from '@/lib/utils.js'
-import { get, post } from '@/lib/api'
+import { searchStock as apiSearchStock, addTransaction } from '@/lib/api'
 
 const BASE_CURRENCY = import.meta?.env?.VITE_BASE_CURRENCY || 'USD'
 
@@ -35,9 +35,8 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
 
     const timeoutId = setTimeout(async () => {
       try {
-        const res = await get(`/stocks/search/${query}`)
-        if (res.ok) {
-          const data = await res.json()
+        const data = await apiSearchStock(query)
+        if (data) {
           setSuggestions(Array.isArray(data) ? data : [data])
         } else {
           setSuggestions([])
@@ -68,10 +67,9 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
       setSearchingStock(true)
       setError('')
       
-      const response = await get(`/stocks/search/${searchSymbol}`)
-      
-      if (response.ok) {
-        const stockData = await response.json()
+      const stockData = await apiSearchStock(searchSymbol)
+
+      if (stockData) {
         setStockInfo(stockData)
         
         // Auto-fill current price if available
@@ -129,7 +127,7 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
       setLoading(true)
       setError('')
       
-      const response = await post('/transactions', {
+      const response = await addTransaction({
         ...formData,
         symbol: formData.symbol.trim().toUpperCase(),
         quantity: parseInt(formData.quantity),
