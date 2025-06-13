@@ -1,4 +1,3 @@
-import assert from 'assert'
 import { sortPerformanceData } from '../src/lib/sort.js'
 
 const sample = [
@@ -7,10 +6,10 @@ const sample = [
   { symbol: 'C', gain: -5, currentValue: 30 }
 ]
 
-const byValue = sortPerformanceData(sample, 'current_value')
-assert.deepStrictEqual(byValue.map(s => s.symbol), ['A', 'C', 'B'])
+test('sortPerformanceData sorts correctly', () => {
+  const byValue = sortPerformanceData(sample, 'current_value')
+  expect(byValue.map(s => s.symbol)).toEqual(['A', 'C', 'B'])
 
-const byGain = sortPerformanceData(sample, 'total_gain')
-assert.deepStrictEqual(byGain.map(s => s.symbol), ['B', 'A', 'C'])
-
-console.log('All sorting tests passed.')
+  const byGain = sortPerformanceData(sample, 'total_gain')
+  expect(byGain.map(s => s.symbol)).toEqual(['B', 'A', 'C'])
+})

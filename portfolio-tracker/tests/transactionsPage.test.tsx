@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import TransactionsPage from '../src/pages/Transactions';
+import { jest } from '@jest/globals';
+import TransactionHistory from '../src/components/TransactionHistory';
 
 // mock fetch
 beforeAll(() => {
@@ -14,6 +15,12 @@ afterAll(() => {
 });
 
 test('shows Import button', async () => {
-  render(<TransactionsPage />);
+  render(
+    <TransactionHistory
+      transactions={[]}
+      onTransactionDeleted={() => {}}
+      onTransactionAdded={() => {}}
+    />
+  );
   expect(await screen.findByRole('button', { name: /Import/i })).toBeInTheDocument();
 });
