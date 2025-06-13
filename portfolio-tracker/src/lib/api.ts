@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL.replace(/\/portfolio$/, '')
+const BASE = (import.meta?.env?.VITE_API_URL || '').replace(/\/portfolio$/, '')
 
 export async function parseGoogleFinance(raw: string) {
   const resp = await fetch(`${BASE}/import/google-finance/preview`, {

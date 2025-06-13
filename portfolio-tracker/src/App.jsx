@@ -3,11 +3,10 @@ import { Button } from '@/components/ui/button.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
-import { TrendingUp, TrendingDown, DollarSign, PlusCircle, RefreshCw } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, RefreshCw } from 'lucide-react'
 import PortfolioOverview from './components/PortfolioOverview'
 import StockHoldings from './components/StockHoldings'
 import TransactionHistory from './components/TransactionHistory'
-import AddTransactionModal from './components/AddTransactionModal'
 import Footer from './components/Footer'
 import './App.css'
 
@@ -18,7 +17,6 @@ function App() {
   const [portfolioSummary, setPortfolioSummary] = useState(null)
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(true)
-  const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false)
 
   const fetchPortfolioData = async () => {
     try {
@@ -68,7 +66,6 @@ function App() {
 
   const handleTransactionAdded = () => {
     fetchPortfolioData()
-    setIsAddTransactionOpen(false)
   }
 
   const handleTransactionDeleted = () => {
@@ -108,13 +105,6 @@ function App() {
             >
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               Update Prices
-            </Button>
-            <Button 
-              onClick={() => setIsAddTransactionOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <PlusCircle className="h-4 w-4" />
-              Add Transaction
             </Button>
           </div>
         </div>
@@ -212,19 +202,14 @@ function App() {
           </TabsContent>
 
           <TabsContent value="transactions" className="space-y-6">
-            <TransactionHistory 
+            <TransactionHistory
               transactions={transactions}
               onTransactionDeleted={handleTransactionDeleted}
+              onTransactionAdded={handleTransactionAdded}
             />
           </TabsContent>
         </Tabs>
 
-        {/* Add Transaction Modal */}
-        <AddTransactionModal
-          isOpen={isAddTransactionOpen}
-          onClose={() => setIsAddTransactionOpen(false)}
-          onTransactionAdded={handleTransactionAdded}
-        />
         <Footer />
       </div>
     </div>
