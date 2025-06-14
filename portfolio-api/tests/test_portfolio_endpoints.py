@@ -89,14 +89,9 @@ def test_stocks_after_transaction(client):
     assert stocks[0]['quantity'] == 2
 
 
-def test_currency_conversion(client, monkeypatch):
-    def fake_get(url, params=None, **kwargs):
-        class R:
-            def json(self_inner):
-                return {"rates": {params['symbols']: 1.2}}
-        return R()
-
-    monkeypatch.setattr('requests.get', fake_get)
+def test_currency_conversion(client, monkeypatch, app):
+    # transactions fetch FX when inserted
+    monkeypatch.setattr('src.routes.portfolio.get_fx_rate', lambda *a, **k: 1.0)
 
     usd = {
         'symbol': 'AAPL',
@@ -117,10 +112,27 @@ def test_currency_conversion(client, monkeypatch):
     client.post('/api/portfolio/transactions', json=usd)
     client.post('/api/portfolio/transactions', json=eur)
 
+    # restore real fx function for summary
+    from src.lib.fx import get_fx_rate as real_fx
+    monkeypatch.setattr('src.routes.portfolio.get_fx_rate', real_fx)
+
+    def fake_fx_get(url, params=None, **kwargs):
+        class R:
+            def json(self_inner):
+                return {"rates": {params['symbols']: 1.2}}
+
+        return R()
+
+    monkeypatch.setattr('src.lib.fx.requests.get', fake_fx_get)
+
     summary = client.get('/api/portfolio/summary')
     assert summary.status_code == 200
     data = summary.get_json()
     assert round(data['total_cost_basis'], 2) == 220.0
+
+    with app.app_context():
+        from src.models.portfolio import FxRate
+        assert FxRate.query.count() == 1
 
 
 def test_portfolio_history(client, app):

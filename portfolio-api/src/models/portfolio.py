@@ -1,10 +1,10 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, date
 from src.models.user import db
+from src.config import PORTFOLIO_BASE_CCY
 import enum
-import os
 
-BASE_CURRENCY = os.environ.get("BASE_CURRENCY", "USD")
+BASE_CURRENCY = PORTFOLIO_BASE_CCY
 
 class CurrencyEnum(enum.Enum):
     USD = "USD"
@@ -84,4 +84,19 @@ class PriceCache(db.Model):
 
     def __repr__(self):
         return f"<PriceCache {self.symbol} {self.price} {self.currency.value}>"
+
+
+class FxRate(db.Model):
+    __tablename__ = "fx_rates"
+
+    id = db.Column(db.Integer, primary_key=True)
+    base = db.Column(db.String(3), nullable=False)
+    target = db.Column(db.String(3), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    rate = db.Column(db.Float, nullable=False)
+
+    __table_args__ = (db.UniqueConstraint("base", "target", "date", name="uix_fx"),)
+
+    def __repr__(self):
+        return f"<FxRate {self.base}->{self.target} {self.date} {self.rate}>"
 
