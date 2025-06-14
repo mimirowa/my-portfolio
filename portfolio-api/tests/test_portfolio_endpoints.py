@@ -1,5 +1,6 @@
 import json
 from datetime import date
+from src.routes.portfolio import QuoteAPIError
 
 
 def test_get_stocks_empty(client):
@@ -129,3 +130,17 @@ def test_search_missing(client, monkeypatch):
     r = client.get('/api/portfolio/stocks/search/FOO')
     assert r.status_code == 404
     assert r.get_json()["message"] == "symbol not found"
+
+
+def test_search_not_found(client):
+    r = client.get('/api/portfolio/stocks/search/FOO')
+    assert r.status_code == 404
+
+
+def test_search_external_fail(monkeypatch, client):
+    monkeypatch.setattr(
+        'src.routes.portfolio.fetch_quote',
+        lambda s: (_ for _ in ()).throw(QuoteAPIError())
+    )
+    r = client.get('/api/portfolio/stocks/search/FAIL')
+    assert r.status_code == 502

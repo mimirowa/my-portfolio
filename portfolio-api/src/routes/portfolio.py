@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, abort
+from flask import Blueprint, request, jsonify, abort, current_app
 from werkzeug.exceptions import HTTPException
 from src.models.user import db
 from src.models.portfolio import Stock, Transaction, CurrencyEnum, BASE_CURRENCY
@@ -10,6 +10,35 @@ from src.data_api import ApiClient
 
 portfolio_bp = Blueprint('portfolio', __name__)
 client = ApiClient()
+
+# --- price lookup helpers ----------------------------------------------------
+
+class QuoteAPIError(Exception):
+    """Raised when the external quote service fails"""
+
+
+def fetch_quote(symbol: str):
+    """Return the latest price for *symbol* or None if unavailable."""
+    # Avoid external calls when no API key is configured
+    if not getattr(client, "api_key", None):
+        return None
+    try:
+        data = client.call_api(
+            "YahooFinance/get_stock_chart",
+            query={"symbol": symbol, "interval": "1d", "range": "1d"},
+        )
+    except Exception as exc:  # network or API error
+        raise QuoteAPIError(str(exc)) from exc
+
+    if not data or "chart" not in data or "result" not in data["chart"]:
+        return None
+    results = data["chart"]["result"]
+    if not results:
+        return None
+    meta = results[0].get("meta", {})
+    if not meta:
+        return None
+    return meta.get("regularMarketPrice")
 
 # Return JSON for not found errors within this blueprint
 @portfolio_bp.errorhandler(404)
@@ -275,45 +304,21 @@ def get_portfolio_summary():
 
 @portfolio_bp.route('/stocks/search/<symbol>', methods=['GET'])
 def search_stock(symbol):
-    """Search for stock information and add to database if not exists"""
-    symbol = symbol.upper()
+    """Return stock details or lookup current price for unknown symbols."""
     try:
-        stock = Stock.query.filter_by(symbol=symbol).first()
-        if not stock:
-            try:
-                chart_data = client.call_api('YahooFinance/get_stock_chart', query={
-                    'symbol': symbol,
-                    'interval': '1d',
-                    'range': '1d'
-                })
-            except Exception:
-                return jsonify({'error': 'pricing down'}), 502
+        stock = Stock.query.filter_by(symbol=symbol.upper()).first()
+        if stock:
+            return jsonify(stock.to_dict()), 200
 
-            if not chart_data or 'chart' not in chart_data or 'result' not in chart_data['chart'] or not chart_data['chart']['result']:
-                abort(404, description='symbol not found')
+        price = fetch_quote(symbol)
+        if price is None:
+            abort(404, description="symbol not found")
 
-            result = chart_data['chart']['result'][0]
-            meta = result.get('meta', {})
-            if not meta:
-                abort(404, description='symbol not found')
-            current_price = meta.get('regularMarketPrice')
-            company_name = meta.get('longName', meta.get('shortName', ''))
+        return jsonify({"symbol": symbol.upper(), "price": price}), 200
 
-            stock = Stock(
-                symbol=symbol,
-                company_name=company_name,
-                current_price=current_price,
-                last_updated=datetime.utcnow()
-            )
-            db.session.add(stock)
-            db.session.commit()
-
-        return jsonify(stock.to_dict())
-    except Exception as e:
-        db.session.rollback()
-        if isinstance(e, HTTPException):
-            raise
-        return jsonify({'error': str(e)}), 500
+    except QuoteAPIError as exc:
+        current_app.logger.exception(exc)
+        return jsonify(error="quote service down"), 502
 
 
 @portfolio_bp.route('/history', methods=['GET'])
