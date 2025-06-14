@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert.jsx'
 import { Loader2, Search } from 'lucide-react'
 import { getCurrencySymbol } from '@/lib/utils.js'
-import { searchStock as apiSearchStock, addTransaction } from '@/lib/api'
+import { searchStock as fetchStock, addTransaction } from '@/lib/api'
 
 const BASE_CURRENCY = import.meta?.env?.VITE_BASE_CURRENCY || 'USD'
 
@@ -35,7 +35,8 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
 
     const timeoutId = setTimeout(async () => {
       try {
-        const data = await apiSearchStock(query)
+        const response = await fetchStock(query)
+        const data = await response.json()
         if (data) {
           setSuggestions(Array.isArray(data) ? data : [data])
         } else {
@@ -66,18 +67,20 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
     try {
       setSearchingStock(true)
       setError('')
-      
-      const stockData = await apiSearchStock(searchSymbol)
 
-      if (stockData) {
-        setStockInfo(stockData)
-        
-        // Auto-fill current price if available
-        if (stockData.current_price && !formData.price_per_share) {
-          setFormData(prev => ({
-            ...prev,
-            price_per_share: stockData.current_price.toString()
-          }))
+      const response = await fetchStock(searchSymbol)
+      if (response.ok) {
+        const stockData = await response.json()
+        if (stockData) {
+          setStockInfo(stockData)
+
+          // Auto-fill current price if available
+          if (stockData.current_price && !formData.price_per_share) {
+            setFormData(prev => ({
+              ...prev,
+              price_per_share: stockData.current_price.toString()
+            }))
+          }
         }
       } else {
         const errorData = await response.json()

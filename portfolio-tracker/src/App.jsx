@@ -9,7 +9,7 @@ import StockHoldings from './components/StockHoldings'
 import TransactionHistory from './components/TransactionHistory'
 import Footer from './components/Footer'
 import './App.css'
-import { getStocks, getSummary, getTransactions, post } from '@/lib/api'
+import { fetchStocks, fetchSummary, fetchTransactions, post } from '@/lib/api'
 
 function App() {
   const [portfolioData, setPortfolioData] = useState([])
@@ -20,10 +20,16 @@ function App() {
   const fetchPortfolioData = async () => {
     try {
       setLoading(true)
+      const [stocksResp, summaryResp, transactionsResp] = await Promise.all([
+        fetchStocks(),
+        fetchSummary(),
+        fetchTransactions()
+      ])
+
       const [stocks, summary, transactions] = await Promise.all([
-        getStocks(),
-        getSummary(),
-        getTransactions()
+        stocksResp.json(),
+        summaryResp.json(),
+        transactionsResp.json()
       ])
 
       setPortfolioData(stocks)
