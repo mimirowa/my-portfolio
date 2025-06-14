@@ -1,7 +1,13 @@
 from flask import Blueprint, request, jsonify, abort, current_app
 from werkzeug.exceptions import HTTPException
 from src.models.user import db
-from src.models.portfolio import Stock, Transaction, CurrencyEnum, PriceCache
+from src.models.portfolio import (
+    Stock,
+    Transaction,
+    CurrencyEnum,
+    PriceCache,
+    BASE_CURRENCY,
+)
 from src.config import PORTFOLIO_BASE_CCY
 from src.lib.fx import get_fx_rate
 import requests
@@ -90,7 +96,7 @@ def get_all_stocks():
                 })
                 portfolio_data.append(stock_data)
         
-        return jsonify({'base_currency': requested_base, 'items': portfolio_data})
+        return jsonify(portfolio_data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
