@@ -2,7 +2,10 @@ import re
 from datetime import datetime
 
 HEADER_RE = re.compile(r"^(?P<ticker>\S+)\s+(?P<action>purchase|sale)$", re.I)
-DETAIL_RE = re.compile(r"(?P<shares>\d+(?:[.,]\d+)?) shares (?:@|at) (?P<symbol>[€$]?)(?P<price>\d+(?:[.,]\d+)?)", re.I)
+DETAIL_RE = re.compile(
+    "(?P<shares>[\\d.,\\u202f ]+) shares (?:@|at) (?P<symbol>[€$]?)(?P<price>[\\d.,\\u202f ]+)",
+    re.I,
+)
 DATE_RE = re.compile(r"(?P<date>\d{1,2}/\d{1,2}/\d{4})")
 
 
@@ -29,9 +32,12 @@ def _parse_group(lines: list[str]):
     if not m_header:
         return None
     detail = lines[2]
-    m_detail = DETAIL_RE.search(detail)
     date_m = DATE_RE.search(detail)
-    if not (m_detail and date_m):
+    if not date_m:
+        return None
+    rest = detail[date_m.end():]
+    m_detail = DETAIL_RE.search(rest)
+    if not m_detail:
         return None
     shares = _parse_number(m_detail.group("shares"))
     price = _parse_number(m_detail.group("price"))
@@ -58,16 +64,44 @@ def _parse_group(lines: list[str]):
 
 def parse_raw(raw: str):
     lines = raw.splitlines()
+    cleaned: list[str] = []
+    skip_extra = 0
+    for ln in lines:
+        stripped = ln.replace("\u202f", "").strip()
+        if not stripped or stripped == "universal_currency_alt":
+            continue
+        if skip_extra:
+            skip_extra -= 1
+            continue
+        if stripped in ("Gain", "Returns"):
+            # skip this line and the following two summary lines
+            skip_extra = 2
+            continue
+        cleaned.append(stripped)
+
     groups: list[list[str]] = []
     current: list[str] = []
-    for ln in lines:
-        stripped = ln.strip()
-        if not stripped or stripped == "universal_currency_alt":
+    skip = 0
+    i = 0
+    while i < len(cleaned):
+        ln = cleaned[i]
+        if skip:
+            skip -= 1
+            i += 1
+            continue
+        if HEADER_RE.match(ln):
             if current:
                 groups.append(current)
                 current = []
+            current.append(ln)
+            if i + 2 < len(cleaned):
+                current.append(cleaned[i + 1])
+                current.append(cleaned[i + 2])
+                skip = 2
+            i += 1
             continue
-        current.append(stripped)
+        current.append(ln)
+        i += 1
     if current:
         groups.append(current)
 
