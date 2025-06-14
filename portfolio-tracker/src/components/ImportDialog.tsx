@@ -3,7 +3,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Button } from '@/components/ui/button.jsx'
 import { Textarea } from '@/components/ui/textarea.jsx'
 import { Table, TableHeader, TableHead, TableRow, TableBody, TableCell } from '@/components/ui/table.jsx'
-import { Alert, AlertDescription } from '@/components/ui/alert.jsx'
+import { Badge } from '@/components/ui/badge.jsx'
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible.jsx'
 import { parseGoogleFinance, importGoogleFinance } from '@/lib/api'
 import { getCurrencySymbol } from '@/lib/utils.js'
 import { toast } from 'sonner'
@@ -20,6 +21,7 @@ export default function ImportDialog({ open, onOpenChange, onImported }: ImportD
   const [invalid, setInvalid] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<'idle' | 'preview'>('idle')
+  const [invalidOpen, setInvalidOpen] = useState(false)
 
   const handleParse = async () => {
     setLoading(true)
@@ -55,6 +57,7 @@ export default function ImportDialog({ open, onOpenChange, onImported }: ImportD
     setRaw('')
     setRows([])
     setInvalid([])
+    setInvalidOpen(false)
     setStep('idle')
     onOpenChange(false)
   }
@@ -78,14 +81,28 @@ export default function ImportDialog({ open, onOpenChange, onImported }: ImportD
         )}
         {step === 'preview' && (
           <div className="space-y-4">
+            <Badge className="w-fit">
+              <span className="text-green-700">Parsed {rows.length} rows</span>
+              {' • '}
+              <span className={invalid.length ? 'text-red-700' : 'text-green-700'}>
+                {invalid.length} invalid
+              </span>
+            </Badge>
             {invalid.length > 0 && (
-              <Alert variant="destructive">
-                <AlertDescription>
-                  {invalid.length} invalid lines ignored
-                </AlertDescription>
-              </Alert>
+              <Collapsible open={invalidOpen} onOpenChange={setInvalidOpen} className="text-sm">
+                <CollapsibleTrigger className="text-red-700 underline">
+                  {invalidOpen ? 'Hide invalid lines' : 'Show invalid lines'}
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <ul className="list-disc pl-4 space-y-1 mt-2">
+                    {invalid.slice(0, 10).map((line, idx) => (
+                      <li key={idx}>{line}</li>
+                    ))}
+                  </ul>
+                </CollapsibleContent>
+              </Collapsible>
             )}
-            <div className="max-h-64 overflow-auto border rounded">
+            <div className="overflow-auto border rounded sm:max-h-[400px]">
               <Table>
                 <TableHeader>
                   <TableRow>
