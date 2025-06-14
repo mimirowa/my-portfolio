@@ -21,6 +21,20 @@ def not_found(e):
 def get_all_stocks():
     """Get all stocks in the portfolio with current holdings"""
     try:
+        env_base = os.environ.get('BASE_CURRENCY', BASE_CURRENCY)
+        requested_base = request.args.get('base', env_base).upper()
+        rate = 1.0
+        if requested_base != env_base:
+            try:
+                resp = requests.get(
+                    "https://api.exchangerate.host/latest",
+                    params={"base": env_base, "symbols": requested_base},
+                    timeout=10,
+                )
+                rate = resp.json()["rates"][requested_base]
+            except Exception:
+                rate = 1.0
+
         stocks = Stock.query.all()
         portfolio_data = []
         
@@ -40,9 +54,12 @@ def get_all_stocks():
             current_quantity = total_bought - total_sold
             
             if current_quantity > 0:  # Only include stocks we currently own
+                # Determine transaction currency (use first buy)
+                tx_currency = buy_transactions[0].currency.value if buy_transactions else env_base
                 # Calculate average cost basis
                 total_cost = sum(t.quantity * t.price_per_share * t.fx_rate for t in buy_transactions)
                 avg_cost_basis = total_cost / total_bought if total_bought > 0 else 0
+                total_cost_orig = sum(t.quantity * t.price_per_share for t in buy_transactions if t.currency.value == tx_currency)
                 
                 # Calculate current value and gains
                 current_value = current_quantity * (stock.current_price or 0)
@@ -53,15 +70,18 @@ def get_all_stocks():
                 stock_data = stock.to_dict()
                 stock_data.update({
                     'quantity': current_quantity,
-                    'avg_cost_basis': round(avg_cost_basis, 2),
-                    'current_value': round(current_value, 2),
-                    'cost_basis': round(cost_basis, 2),
-                    'total_gain': round(total_gain, 2),
+                    'avg_cost_basis': round(avg_cost_basis * rate, 2),
+                    'avg_cost_original': round(total_cost_orig / total_bought, 2) if total_bought > 0 else 0,
+                    'transaction_currency': tx_currency,
+                    'current_price': round((stock.current_price or 0) * rate, 2) if stock.current_price else None,
+                    'current_value': round(current_value * rate, 2),
+                    'cost_basis': round(cost_basis * rate, 2),
+                    'total_gain': round(total_gain * rate, 2),
                     'total_gain_percent': round(total_gain_percent, 2)
                 })
                 portfolio_data.append(stock_data)
         
-        return jsonify(portfolio_data)
+        return jsonify({'base_currency': requested_base, 'items': portfolio_data})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -237,6 +257,20 @@ def delete_transaction(transaction_id):
 def get_portfolio_summary():
     """Get portfolio summary with total value, gains, etc."""
     try:
+        env_base = os.environ.get('BASE_CURRENCY', BASE_CURRENCY)
+        requested_base = request.args.get('base', env_base).upper()
+        rate = 1.0
+        if requested_base != env_base:
+            try:
+                resp = requests.get(
+                    "https://api.exchangerate.host/latest",
+                    params={"base": env_base, "symbols": requested_base},
+                    timeout=10,
+                )
+                rate = resp.json()["rates"][requested_base]
+            except Exception:
+                rate = 1.0
+
         stocks = Stock.query.all()
         total_value = 0
         total_cost_basis = 0
@@ -274,21 +308,22 @@ def get_portfolio_summary():
                 current_value = current_quantity * (stock.current_price or 0)
                 total_value += current_value
                 total_cost_basis += cost_basis
-                
+
                 portfolio_stocks.append({
                     'symbol': stock.symbol,
                     'quantity': current_quantity,
-                    'current_value': current_value,
-                    'cost_basis': cost_basis
+                    'current_value': round(current_value * rate, 2),
+                    'cost_basis': round(cost_basis * rate, 2)
                 })
         
         total_gain = total_value - total_cost_basis
         total_gain_percent = (total_gain / total_cost_basis * 100) if total_cost_basis > 0 else 0
-        
+
         return jsonify({
-            'total_value': round(total_value, 2),
-            'total_cost_basis': round(total_cost_basis, 2),
-            'total_gain': round(total_gain, 2),
+            'base_currency': requested_base,
+            'total_value': round(total_value * rate, 2),
+            'total_cost_basis': round(total_cost_basis * rate, 2),
+            'total_gain': round(total_gain * rate, 2),
             'total_gain_percent': round(total_gain_percent, 2),
             'stocks_count': len(portfolio_stocks),
             'stocks': portfolio_stocks

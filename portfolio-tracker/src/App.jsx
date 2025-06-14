@@ -1,8 +1,5 @@
-import { Button } from '@/components/ui/button.jsx'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.jsx'
-import { Badge } from '@/components/ui/badge.jsx'
-import { TrendingUp, TrendingDown, DollarSign, RefreshCw } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import PortfolioOverview from './components/PortfolioOverview'
 import StockHoldings from './components/StockHoldings'
 import TransactionHistory from './components/TransactionHistory'
@@ -12,8 +9,11 @@ import './App.css'
 import { toast } from 'sonner'
 import { usePortfolio } from '@/hooks/usePortfolio'
 import { Toaster } from '@/components/ui/sonner.jsx'
+import Header from '@/components/Header.jsx'
+import { useSettings } from '@/store/settingsSlice'
 
 function App() {
+  const { baseCurrency } = useSettings()
   const {
     holdings: portfolioData,
     metrics: portfolioSummary,
@@ -21,7 +21,7 @@ function App() {
     loading,
     refresh,
     updatePrices,
-  } = usePortfolio()
+  } = usePortfolio(baseCurrency)
 
   const updateStockPrices = async () => {
     const result = await updatePrices()
@@ -51,23 +51,7 @@ function App() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Portfolio Tracker</h1>
-            <p className="text-gray-600 mt-1">Track your investments and performance</p>
-          </div>
-          <div className="flex gap-3">
-            <Button 
-              onClick={updateStockPrices} 
-              variant="outline" 
-              disabled={loading}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              Update Prices
-            </Button>
-          </div>
-        </div>
+        <Header onUpdatePrices={updateStockPrices} loading={loading} />
 
         {/* Portfolio Summary Cards */}
         <PortfolioSummary summary={portfolioSummary} />
