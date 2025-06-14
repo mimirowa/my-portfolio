@@ -122,6 +122,12 @@ TSLA purchase
 10/02/2025 · 6 shares at €356.00
 """)
 
+PLN_SAMPLE = textwrap.dedent("""
+CDR purchase
+zł1,000.00
+01/07/2025 · 10 shares at zł100.00
+""")
+
 
 def test_parse_activity_sample():
     rows, invalid = parse_raw(SAMPLE)
@@ -130,7 +136,7 @@ def test_parse_activity_sample():
     first = rows[0]
     assert first["ticker"] == "SMCI"
     assert first["action"] == "sale"
-    assert first["currency"] == "€"
+    assert first["currency"] == "EUR"
     assert first["shares"] == 26
     assert first["price"] == 41.57
     assert first["date"] == "2025-05-27"
@@ -142,3 +148,14 @@ def test_parse_activity_sales():
     assert len(sales) == 7
     tickers = {r["ticker"] for r in sales}
     assert tickers == {"SMCI", "MSFT", "TSLA", "UBI"}
+
+
+def test_parse_pln_activity():
+    rows, invalid = parse_raw(PLN_SAMPLE)
+    assert not invalid
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["ticker"] == "CDR"
+    assert row["currency"] == "PLN"
+    assert row["shares"] == 10
+    assert row["price"] == 100.0
