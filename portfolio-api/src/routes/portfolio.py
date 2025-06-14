@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify, abort, current_app
 from werkzeug.exceptions import HTTPException
 from src.models.user import db
-from src.models.portfolio import Stock, Transaction, CurrencyEnum, BASE_CURRENCY, PriceCache
+from src.models.portfolio import Stock, Transaction, CurrencyEnum, PriceCache
+from src.config import PORTFOLIO_BASE_CCY
+from src.lib.fx import get_fx_rate
 import requests
 from datetime import datetime, date, timedelta
 import os
@@ -24,6 +26,8 @@ def get_all_stocks():
         stocks = Stock.query.all()
         portfolio_data = []
         
+        base_currency = os.environ.get("PORTFOLIO_BASE_CCY", PORTFOLIO_BASE_CCY)
+
         for stock in stocks:
             # Calculate current holdings
             buy_transactions = Transaction.query.filter_by(
@@ -41,7 +45,12 @@ def get_all_stocks():
             
             if current_quantity > 0:  # Only include stocks we currently own
                 # Calculate average cost basis
-                total_cost = sum(t.quantity * t.price_per_share * t.fx_rate for t in buy_transactions)
+                total_cost = sum(
+                    t.quantity
+                    * t.price_per_share
+                    * get_fx_rate(t.currency.value, base_currency, t.transaction_date)
+                    for t in buy_transactions
+                )
                 avg_cost_basis = total_cost / total_bought if total_bought > 0 else 0
                 
                 # Calculate current value and gains
@@ -166,7 +175,7 @@ def add_transaction():
         
         symbol = data['symbol'].upper()
 
-        base_currency = os.environ.get('BASE_CURRENCY', BASE_CURRENCY)
+        base_currency = os.environ.get('PORTFOLIO_BASE_CCY', PORTFOLIO_BASE_CCY)
         currency = data.get('currency', base_currency).upper()
         if currency not in CurrencyEnum.__members__:
             return jsonify({'error': 'Unsupported currency'}), 400
@@ -187,13 +196,7 @@ def add_transaction():
         fx_rate = 1.0
         if currency != base_currency:
             try:
-                resp = requests.get(
-                    f"https://api.exchangerate.host/{transaction_date.isoformat()}",
-                    params={"base": currency, "symbols": base_currency},
-                    timeout=10,
-                )
-                data_fx = resp.json()
-                fx_rate = data_fx['rates'][base_currency]
+                fx_rate = get_fx_rate(currency, base_currency, transaction_date)
             except Exception:
                 return jsonify({'error': 'Failed to fetch FX rate'}), 500
 
@@ -238,6 +241,7 @@ def get_portfolio_summary():
     """Get portfolio summary with total value, gains, etc."""
     try:
         stocks = Stock.query.all()
+        base_currency = os.environ.get("PORTFOLIO_BASE_CCY", PORTFOLIO_BASE_CCY)
         total_value = 0
         total_cost_basis = 0
         portfolio_stocks = []
@@ -268,7 +272,15 @@ def get_portfolio_summary():
                         break
                     
                     shares_to_use = min(remaining_quantity, transaction.quantity)
-                    cost_basis += shares_to_use * transaction.price_per_share * transaction.fx_rate
+                    cost_basis += (
+                        shares_to_use
+                        * transaction.price_per_share
+                        * get_fx_rate(
+                            transaction.currency.value,
+                            base_currency,
+                            transaction.transaction_date,
+                        )
+                    )
                     remaining_quantity -= shares_to_use
                 
                 current_value = current_quantity * (stock.current_price or 0)
@@ -338,6 +350,7 @@ def get_portfolio_history():
         if start_date > end_date:
             return jsonify({'error': 'start date must be before end date'}), 400
 
+        base_currency = os.environ.get("PORTFOLIO_BASE_CCY", PORTFOLIO_BASE_CCY)
         stocks = {stock.id: stock for stock in Stock.query.all()}
 
         history = []
@@ -351,10 +364,18 @@ def get_portfolio_history():
                 t = transactions[idx]
                 if t.transaction_type == 'buy':
                     holdings[t.stock_id] = holdings.get(t.stock_id, 0) + t.quantity
-                    contributions += t.quantity * t.price_per_share * t.fx_rate
+                    contributions += (
+                        t.quantity
+                        * t.price_per_share
+                        * get_fx_rate(t.currency.value, base_currency, t.transaction_date)
+                    )
                 else:
                     holdings[t.stock_id] = holdings.get(t.stock_id, 0) - t.quantity
-                    contributions -= t.quantity * t.price_per_share * t.fx_rate
+                    contributions -= (
+                        t.quantity
+                        * t.price_per_share
+                        * get_fx_rate(t.currency.value, base_currency, t.transaction_date)
+                    )
                 idx += 1
 
             market_value = 0.0
