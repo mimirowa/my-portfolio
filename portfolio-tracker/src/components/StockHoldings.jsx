@@ -6,12 +6,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { TrendingUp, TrendingDown, RefreshCw, ExternalLink } from 'lucide-react'
 import { getCurrencySymbol } from '@/lib/utils.js'
 import { post, fetchCurrentPrice } from '@/lib/api'
+import { calcPortfolioMetrics } from '@/lib/calcPortfolioMetrics'
 
 const BASE_CURRENCY = import.meta?.env?.VITE_BASE_CURRENCY || 'USD'
 
 function StockHoldings({ portfolioData, onRefresh, loading }) {
   const [updatingStock, setUpdatingStock] = useState(null)
   const [prices, setPrices] = useState({})
+
+  const mergedData = (portfolioData || []).map((s) => ({
+    ...s,
+    current_price: prices[s.symbol]?.error
+      ? null
+      : prices[s.symbol]?.price ?? s.current_price,
+  }))
+  const metrics = calcPortfolioMetrics(mergedData)
 
   useEffect(() => {
     let cancelled = false
@@ -97,7 +106,7 @@ function StockHoldings({ portfolioData, onRefresh, loading }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {portfolioData.map((stock) => (
+            {metrics.holdings.map((stock) => (
                 <TableRow key={stock.symbol} className="hover:bg-gray-50">
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -190,26 +199,26 @@ function StockHoldings({ portfolioData, onRefresh, loading }) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
               <p className="text-gray-600">Total Positions</p>
-              <p className="font-medium">{portfolioData.length}</p>
+              <p className="font-medium">{metrics.stocks_count}</p>
             </div>
             <div>
               <p className="text-gray-600">Total Shares</p>
               <p className="font-medium">
-                {portfolioData.reduce((sum, stock) => sum + stock.quantity, 0).toLocaleString()}
+                {metrics.holdings.reduce((sum, s) => sum + s.quantity, 0).toLocaleString()}
               </p>
             </div>
             <div>
               <p className="text-gray-600">Total Value</p>
               <p className="font-medium">
                 {getCurrencySymbol(BASE_CURRENCY)}
-                {portfolioData.reduce((sum, stock) => sum + (stock.current_value || 0), 0).toLocaleString()}
+                {metrics.total_value.toLocaleString()}
               </p>
             </div>
             <div>
               <p className="text-gray-600">Total Gain/Loss</p>
-              <p className={`font-medium ${portfolioData.reduce((sum, stock) => sum + (stock.total_gain || 0), 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <p className={`font-medium ${metrics.total_gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {getCurrencySymbol(BASE_CURRENCY)}
-                {portfolioData.reduce((sum, stock) => sum + (stock.total_gain || 0), 0).toLocaleString()}
+                {metrics.total_gain.toLocaleString()}
               </p>
             </div>
           </div>

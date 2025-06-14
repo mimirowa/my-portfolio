@@ -32,5 +32,6 @@ test('shows fetched current price', async () => {
     />
   )
   await waitFor(() => expect(global.fetch).toHaveBeenCalled())
-  expect(await screen.findByText(/123\.45/)).toBeInTheDocument()
+  const matches = await screen.findAllByText(/123\.45/)
+  expect(matches.length).toBeGreaterThan(0)
 })

@@ -4,11 +4,15 @@ import { useState } from 'react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.jsx'
 import PortfolioHistoryChart from './PortfolioHistoryChart'
 import { sortPerformanceData } from '@/lib/sort.js'
+import { calcPortfolioMetrics } from '@/lib/calcPortfolioMetrics'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C']
 
-function PortfolioOverview({ portfolioData, portfolioSummary }) {
-  if (!portfolioData || portfolioData.length === 0) {
+function PortfolioOverview({ portfolioData }) {
+  const metrics = calcPortfolioMetrics(portfolioData || [])
+  const portfolioSummary = metrics
+  const data = metrics.holdings
+  if (!data || data.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -25,7 +29,7 @@ function PortfolioOverview({ portfolioData, portfolioSummary }) {
   }
 
   // Prepare data for pie chart (allocation by value)
-  const allocationData = portfolioData.map((stock, index) => ({
+  const allocationData = data.map((stock, index) => ({
     name: stock.symbol,
     value: stock.current_value,
     percentage: portfolioSummary ? ((stock.current_value / portfolioSummary.total_value) * 100).toFixed(1) : 0,
@@ -33,7 +37,7 @@ function PortfolioOverview({ portfolioData, portfolioSummary }) {
   }))
 
   // Prepare data for performance chart
-  const performanceData = portfolioData.map(stock => ({
+  const performanceData = data.map(stock => ({
     symbol: stock.symbol,
     gain: stock.total_gain,
     gainPercent: stock.total_gain_percent,
@@ -165,7 +169,8 @@ function PortfolioOverview({ portfolioData, portfolioSummary }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {portfolioData
+            {data
+              .slice()
               .sort((a, b) => b.total_gain_percent - a.total_gain_percent)
               .slice(0, 5)
               .map((stock) => (
@@ -196,7 +201,7 @@ function PortfolioOverview({ portfolioData, portfolioSummary }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {portfolioData.map((stock) => (
+            {data.map((stock) => (
               <div key={stock.symbol} className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{stock.symbol}</p>
