@@ -1,16 +1,46 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Button } from '@/components/ui/button.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table.jsx'
 import { TrendingUp, TrendingDown, RefreshCw, ExternalLink } from 'lucide-react'
 import { getCurrencySymbol } from '@/lib/utils.js'
-import { post } from '@/lib/api'
+import { post, fetchCurrentPrice } from '@/lib/api'
 
-const BASE_CURRENCY = import.meta.env.VITE_BASE_CURRENCY || 'USD'
+const BASE_CURRENCY = import.meta?.env?.VITE_BASE_CURRENCY || 'USD'
 
 function StockHoldings({ portfolioData, onRefresh, loading }) {
   const [updatingStock, setUpdatingStock] = useState(null)
+  const [prices, setPrices] = useState({})
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadPrices() {
+      const entries = await Promise.all(
+        (portfolioData || []).map(async (s) => {
+          try {
+            const resp = await fetchCurrentPrice(s.symbol)
+            if (!resp.ok) {
+              return [s.symbol, { error: true }]
+            }
+            const data = await resp.json()
+            return [s.symbol, { price: data.current_price, last_updated: data.last_updated }]
+          } catch {
+            return [s.symbol, { error: true }]
+          }
+        })
+      )
+      if (!cancelled) setPrices(Object.fromEntries(entries))
+    }
+
+    setPrices({})
+    if (portfolioData && portfolioData.length > 0) {
+      loadPrices()
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [portfolioData])
 
   const updateSingleStockPrice = async (symbol) => {
     try {
@@ -92,12 +122,18 @@ function StockHoldings({ portfolioData, onRefresh, loading }) {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
                       {getCurrencySymbol(BASE_CURRENCY)}
-                      {stock.current_price?.toFixed(2) || 'N/A'}
-                      {stock.last_updated && (
-                        <span className="text-xs text-gray-500">
-                          {new Date(stock.last_updated).toLocaleDateString()}
-                        </span>
-                      )}
+                      {prices[stock.symbol]
+                        ? prices[stock.symbol].error
+                          ? 'N/A'
+                          : prices[stock.symbol].price?.toFixed(2)
+                        : '–'}
+                      {prices[stock.symbol] &&
+                        prices[stock.symbol].last_updated &&
+                        !prices[stock.symbol].error && (
+                          <span className="text-xs text-gray-500">
+                            {new Date(prices[stock.symbol].last_updated).toLocaleDateString()}
+                          </span>
+                        )}
                     </div>
                   </TableCell>
                   <TableCell className="text-right font-medium">

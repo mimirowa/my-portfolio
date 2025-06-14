@@ -20,6 +20,8 @@ export const fetchSummary = () => fetch(`${BASE}/summary`)
 export const fetchTransactions = () => fetch(`${BASE}/transactions`)
 export const searchStock = (s: string) =>
   fetch(`${BASE}/stocks/search/${encodeURIComponent(s)}`)
+export const fetchCurrentPrice = (symbol: string) =>
+  fetch(`${BASE}/stocks/${encodeURIComponent(symbol)}`)
 export const addTransaction = (body: any) =>
   fetch(`${BASE}/transactions`, {
     method: 'POST',
