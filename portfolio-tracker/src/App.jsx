@@ -9,8 +9,9 @@ import TransactionHistory from './components/TransactionHistory'
 import PortfolioSummary from './components/PortfolioSummary'
 import Footer from './components/Footer'
 import './App.css'
-import { post } from '@/lib/api'
+import { toast } from 'sonner'
 import { usePortfolio } from '@/hooks/usePortfolio'
+import { Toaster } from '@/components/ui/sonner.jsx'
 
 function App() {
   const {
@@ -22,7 +23,14 @@ function App() {
     updatePrices,
   } = usePortfolio()
 
-  const updateStockPrices = updatePrices
+  const updateStockPrices = async () => {
+    const result = await updatePrices()
+    if (result && typeof result.updated === 'number') {
+      toast.success(`Updated ${result.updated} prices`)
+    } else {
+      toast.error('Failed to refresh prices')
+    }
+  }
 
   const handleTransactionAdded = refresh
 

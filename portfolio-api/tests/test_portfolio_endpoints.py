@@ -144,3 +144,40 @@ def test_search_external_fail(monkeypatch, client):
     )
     r = client.get('/api/portfolio/stocks/search/FAIL')
     assert r.status_code == 502
+
+
+def test_prices_refresh_updates_cache(client, monkeypatch, app):
+    tx = {
+        'symbol': 'AAPL',
+        'transaction_type': 'buy',
+        'quantity': 1,
+        'price_per_share': 100.0,
+        'transaction_date': '2024-01-01'
+    }
+    client.post('/api/portfolio/transactions', json=tx)
+
+    monkeypatch.setenv('ALPHAVANTAGE_API_KEY', 'demo')
+
+    def fake_get(url, params=None, **kwargs):
+        class R:
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {
+                    'Global Quote': {
+                        '05. price': '123.45'
+                    }
+                }
+
+        return R()
+
+    monkeypatch.setattr('requests.get', fake_get)
+
+    resp = client.post('/api/portfolio/prices/refresh', json={})
+    assert resp.status_code == 200
+    assert resp.get_json() == {'updated': 1, 'failed': []}
+
+    with app.app_context():
+        from src.models.portfolio import PriceCache
+        assert PriceCache.query.count() == 1

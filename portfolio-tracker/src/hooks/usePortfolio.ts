@@ -41,10 +41,10 @@ export function usePortfolio() {
   const updatePrices = async () => {
     setLoading(true)
     try {
-      for (const h of holdings) {
-        await post(`/stocks/${h.symbol}/price`, {})
-      }
+      const resp = await post('/prices/refresh', {})
+      const data = resp.ok ? await resp.json() : null
       await loadData()
+      return data
     } finally {
       setLoading(false)
     }
