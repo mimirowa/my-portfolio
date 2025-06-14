@@ -30,6 +30,48 @@ def test_add_transaction_and_fetch(client):
     assert items[0]['stock_symbol'] == 'AAPL'
 
 
+def test_transaction_custom_currency(client, app, monkeypatch):
+    def fake_get(url, params=None, **kwargs):
+        class R:
+            def json(self_inner):
+                return {"rates": {params['symbols']: 1.0}}
+
+        return R()
+
+    monkeypatch.setattr('requests.get', fake_get)
+
+    data = {
+        'symbol': 'PLN1',
+        'transaction_type': 'buy',
+        'quantity': 1,
+        'price_per_share': 100.0,
+        'transaction_date': '2024-03-01',
+        'currency': 'PLN',
+    }
+    resp = client.post('/api/portfolio/transactions', json=data)
+    assert resp.status_code == 201
+    body = resp.get_json()
+    assert body['currency'] == 'PLN'
+    with app.app_context():
+        from src.models.portfolio import Transaction
+        tx = Transaction.query.get(body['id'])
+        assert tx.currency.name == 'PLN'
+
+
+def test_transaction_default_currency(client):
+    data = {
+        'symbol': 'USD1',
+        'transaction_type': 'buy',
+        'quantity': 1,
+        'price_per_share': 50.0,
+        'transaction_date': '2024-03-02'
+    }
+    resp = client.post('/api/portfolio/transactions', json=data)
+    assert resp.status_code == 201
+    body = resp.get_json()
+    assert body['currency'] == 'USD'
+
+
 def test_stocks_after_transaction(client):
     data = {
         'symbol': 'MSFT',
@@ -181,3 +223,5 @@ def test_prices_refresh_updates_cache(client, monkeypatch, app):
     with app.app_context():
         from src.models.portfolio import PriceCache
         assert PriceCache.query.count() == 1
+        rec = PriceCache.query.first()
+        assert rec.currency.name == 'USD'

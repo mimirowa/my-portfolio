@@ -125,6 +125,7 @@ def update_stock_price(symbol):
 def refresh_prices():
     """Refresh prices for all known tickers using AlphaVantage."""
     symbols = [s.symbol for s in Stock.query.distinct(Stock.symbol)]
+    base_currency = os.environ.get('BASE_CURRENCY', BASE_CURRENCY)
     updated = 0
     failed = []
     for symbol in symbols:
@@ -138,7 +139,13 @@ def refresh_prices():
         stock = Stock.query.filter_by(symbol=symbol).first()
         stock.current_price = price
         stock.last_updated = datetime.utcnow()
-        db.session.add(PriceCache(symbol=symbol, price=price))
+        db.session.add(
+            PriceCache(
+                symbol=symbol,
+                price=price,
+                currency=CurrencyEnum[base_currency]
+            )
+        )
         updated += 1
     db.session.commit()
     return jsonify({"updated": updated, "failed": failed})
