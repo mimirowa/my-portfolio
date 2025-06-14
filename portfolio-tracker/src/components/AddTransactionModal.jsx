@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog.jsx'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
@@ -25,6 +25,8 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
   const [error, setError] = useState('')
   const [stockInfo, setStockInfo] = useState(null)
   const [suggestions, setSuggestions] = useState([])
+  const [searchResults, setSearchResults] = useState([])
+  const quantityRef = useRef(null)
 
   useEffect(() => {
     const query = formData.symbol.trim()
@@ -50,6 +52,12 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
     return () => clearTimeout(timeoutId)
   }, [formData.symbol])
 
+  useEffect(() => {
+    if (!formData.symbol && formData.price_per_share) {
+      setFormData(prev => ({ ...prev, price_per_share: '' }))
+    }
+  }, [formData.symbol])
+
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -63,7 +71,7 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
   const searchStock = async (symbolOverride) => {
     const searchSymbol = (symbolOverride || formData.symbol).trim()
     if (!searchSymbol) return
-    
+
     try {
       setSearchingStock(true)
       setError('')
@@ -72,25 +80,34 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
       if (response.ok) {
         const stockData = await response.json()
         if (stockData) {
-          setStockInfo(stockData)
+          const results = Array.isArray(stockData) ? stockData : [stockData]
+          setSearchResults(results)
+          const first = results[0]
+          setStockInfo(first)
 
-          // Auto-fill current price if available
-          if (stockData.current_price && !formData.price_per_share) {
+          const autoPrice = first.price ?? first.current_price
+          if (results.length === 1 && autoPrice && !formData.price_per_share) {
             setFormData(prev => ({
               ...prev,
-              price_per_share: stockData.current_price.toString()
+              price_per_share: autoPrice.toString()
             }))
+            quantityRef.current?.focus()
           }
+        } else {
+          setSearchResults([])
+          setStockInfo(null)
         }
       } else {
         const errorData = await response.json()
         setError(errorData.error || 'Stock not found')
         setStockInfo(null)
+        setSearchResults([])
       }
   } catch (err) {
       console.error('Error searching for stock', err)
       setError('Error searching for stock')
       setStockInfo(null)
+      setSearchResults([])
     } finally {
       setSearchingStock(false)
     }
@@ -200,7 +217,7 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={searchStock}
+                onClick={() => searchStock()}
                 disabled={searchingStock || !formData.symbol.trim()}
                 className="px-3"
               >
@@ -279,6 +296,7 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
             <Label htmlFor="quantity">Quantity (Shares)</Label>
             <Input
               id="quantity"
+              ref={quantityRef}
               type="number"
               min="1"
               placeholder="e.g., 100"
