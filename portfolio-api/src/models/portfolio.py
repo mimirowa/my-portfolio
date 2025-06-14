@@ -12,6 +12,7 @@ class CurrencyEnum(enum.Enum):
     SEK = "SEK"
     GBP = "GBP"
     JPY = "JPY"
+    PLN = "PLN"
 
 class Stock(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -78,8 +79,9 @@ class PriceCache(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     symbol = db.Column(db.String(10), nullable=False)
     price = db.Column(db.Float, nullable=False)
+    currency = db.Column(db.Enum(CurrencyEnum), nullable=False, default=BASE_CURRENCY)
     fetched_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return f"<PriceCache {self.symbol} {self.price}>"
+        return f"<PriceCache {self.symbol} {self.price} {self.currency.value}>"
 
