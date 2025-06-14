@@ -3,15 +3,17 @@ from datetime import datetime
 
 HEADER_RE = re.compile(r"^(?P<ticker>\S+)\s+(?P<action>purchase|sale)$", re.I)
 DETAIL_RE = re.compile(
-    "(?P<shares>[\\d.,\\u202f ]+) shares (?:@|at) (?P<symbol>[€$]?)(?P<price>[\\d.,\\u202f ]+)",
+    r"(?P<shares>[\d.,\u202f ]+) shares (?:@|at) (?P<symbol>€|\$|£|¥|zł|kr)?(?P<price>[\d.,\u202f ]+)(?: (?P<code>[A-Za-z]{3}))?",
     re.I,
 )
+AMOUNT_SYMBOL_RE = re.compile(r"^(€|\$|£|¥|zł|kr)")
 DATE_RE = re.compile(r"(?P<date>\d{1,2}/\d{1,2}/\d{4})")
 
 
 def _parse_number(text: str) -> float | None:
     clean = text.replace("\u202f", "").replace(" ", "")
-    clean = clean.replace("€", "").replace("$", "")
+    for sym in ["€", "$", "£", "¥", "zł", "kr"]:
+        clean = clean.replace(sym, "")
     if clean.count(",") > 0 and clean.count(".") > 0:
         if clean.rfind(",") > clean.rfind("."):
             clean = clean.replace(".", "").replace(",", ".")
@@ -41,9 +43,22 @@ def _parse_group(lines: list[str]):
         return None
     shares = _parse_number(m_detail.group("shares"))
     price = _parse_number(m_detail.group("price"))
-    symbol = m_detail.group("symbol") or lines[1].strip()[:1]
-    if symbol not in ("$", "€"):
-        symbol = "$"
+    symbol = m_detail.group("symbol")
+    if not symbol:
+        m_sym = AMOUNT_SYMBOL_RE.match(lines[1].strip())
+        symbol = m_sym.group(1) if m_sym else "$"
+    code = m_detail.group("code")
+    if code:
+        currency = code.upper()
+    else:
+        currency = {
+            "$": "USD",
+            "€": "EUR",
+            "£": "GBP",
+            "¥": "JPY",
+            "zł": "PLN",
+            "kr": "SEK",
+        }.get(symbol, "USD")
     try:
         date = datetime.strptime(date_m.group("date"), "%d/%m/%Y").date()
     except ValueError:
@@ -55,7 +70,7 @@ def _parse_group(lines: list[str]):
         "shares": shares,
         "price": price,
         "amount": round((shares or 0) * (price or 0), 2),
-        "currency": symbol,
+        "currency": currency,
     }
     if None in row.values():
         return None

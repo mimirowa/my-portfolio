@@ -40,12 +40,15 @@ def google_finance_import():
         if exists:
             duplicates += 1
             continue
+        currency_key = row.get('currency', 'USD')
+        if currency_key not in CurrencyEnum.__members__:
+            currency_key = 'USD'
         tx = Transaction(
             stock_id=stock.id,
             transaction_type=side,
             quantity=int(row['shares']),
             price_per_share=float(row['price']),
-            currency=CurrencyEnum['USD' if row['currency'] == '$' else 'EUR'],
+            currency=CurrencyEnum[currency_key],
             fx_rate=1.0,
             transaction_date=date_obj,
         )
