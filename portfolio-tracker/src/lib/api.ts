@@ -1,27 +1,27 @@
 const env = (typeof import.meta !== 'undefined' && (import.meta as any).env) ||
   (process.env as any)
 
-const API = env.VITE_PORTFOLIO_API ?? ''
-const IMPORT_API = env.VITE_IMPORT_API ?? API
+export const BASE = (env.VITE_PORTFOLIO_API ?? '').replace(/\/$/, '')
+const IMPORT_API = env.VITE_IMPORT_API ?? BASE
 
-export const API_BASE_URL = API
+export const API_BASE_URL = BASE
 
-export const get = (path: string) => fetch(`${API}${path}`)
+export const get = (path: string) => fetch(`${BASE}${path}`)
 export const post = (path: string, body: any) =>
-  fetch(`${API}${path}`, {
+  fetch(`${BASE}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   })
-export const del = (path: string) => fetch(`${API}${path}`, { method: 'DELETE' })
+export const del = (path: string) => fetch(`${BASE}${path}`, { method: 'DELETE' })
 
-export const getStocks = () => fetch(`${API}/stocks`).then(r => r.json())
-export const getSummary = () => fetch(`${API}/portfolio/summary`).then(r => r.json())
-export const getTransactions = () => fetch(`${API}/transactions`).then(r => r.json())
+export const fetchStocks = () => fetch(`${BASE}/stocks`)
+export const fetchSummary = () => fetch(`${BASE}/summary`)
+export const fetchTransactions = () => fetch(`${BASE}/transactions`)
 export const searchStock = (s: string) =>
-  fetch(`${API}/stocks/search/${encodeURIComponent(s)}`).then(r => r.json())
+  fetch(`${BASE}/stocks/search/${encodeURIComponent(s)}`)
 export const addTransaction = (body: any) =>
-  fetch(`${API}/transactions`, {
+  fetch(`${BASE}/transactions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
