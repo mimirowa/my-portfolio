@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.jsx'
@@ -7,66 +6,27 @@ import { TrendingUp, TrendingDown, DollarSign, RefreshCw } from 'lucide-react'
 import PortfolioOverview from './components/PortfolioOverview'
 import StockHoldings from './components/StockHoldings'
 import TransactionHistory from './components/TransactionHistory'
+import PortfolioSummary from './components/PortfolioSummary'
 import Footer from './components/Footer'
 import './App.css'
-import { fetchStocks, fetchSummary, fetchTransactions, post } from '@/lib/api'
+import { post } from '@/lib/api'
+import { usePortfolio } from '@/hooks/usePortfolio'
 
 function App() {
-  const [portfolioData, setPortfolioData] = useState([])
-  const [portfolioSummary, setPortfolioSummary] = useState(null)
-  const [transactions, setTransactions] = useState([])
-  const [loading, setLoading] = useState(true)
+  const {
+    holdings: portfolioData,
+    metrics: portfolioSummary,
+    transactions,
+    loading,
+    refresh,
+    updatePrices,
+  } = usePortfolio()
 
-  const fetchPortfolioData = async () => {
-    try {
-      setLoading(true)
-      const [stocksResp, summaryResp, transactionsResp] = await Promise.all([
-        fetchStocks(),
-        fetchSummary(),
-        fetchTransactions()
-      ])
+  const updateStockPrices = updatePrices
 
-      const [stocks, summary, transactions] = await Promise.all([
-        stocksResp.json(),
-        summaryResp.json(),
-        transactionsResp.json()
-      ])
+  const handleTransactionAdded = refresh
 
-      setPortfolioData(stocks)
-      setPortfolioSummary(summary)
-      setTransactions(transactions)
-    } catch (error) {
-      console.error('Error fetching portfolio data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const updateStockPrices = async () => {
-    try {
-      setLoading(true)
-      for (const stock of portfolioData) {
-        await post(`/stocks/${stock.symbol}/price`, {})
-      }
-      await fetchPortfolioData()
-    } catch (error) {
-      console.error('Error updating stock prices:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleTransactionAdded = () => {
-    fetchPortfolioData()
-  }
-
-  const handleTransactionDeleted = () => {
-    fetchPortfolioData()
-  }
-
-  useEffect(() => {
-    fetchPortfolioData()
-  }, [])
+  const handleTransactionDeleted = refresh
 
   if (loading && !portfolioSummary) {
     return (
@@ -102,73 +62,7 @@ function App() {
         </div>
 
         {/* Portfolio Summary Cards */}
-        {portfolioSummary && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">${portfolioSummary.total_value.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">
-                  Cost basis: ${portfolioSummary.total_cost_basis.toLocaleString()}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Gain/Loss</CardTitle>
-                {portfolioSummary.total_gain >= 0 ? (
-                  <TrendingUp className="h-4 w-4 text-green-600" />
-                ) : (
-                  <TrendingDown className="h-4 w-4 text-red-600" />
-                )}
-              </CardHeader>
-              <CardContent>
-                <div className={`text-2xl font-bold ${portfolioSummary.total_gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  ${portfolioSummary.total_gain.toLocaleString()}
-                </div>
-                <p className={`text-xs ${portfolioSummary.total_gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {portfolioSummary.total_gain_percent >= 0 ? '+' : ''}{portfolioSummary.total_gain_percent.toFixed(2)}%
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Holdings</CardTitle>
-                <Badge variant="secondary">{portfolioSummary.stocks_count}</Badge>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{portfolioSummary.stocks_count}</div>
-                <p className="text-xs text-muted-foreground">
-                  Different stocks
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Performance</CardTitle>
-                {portfolioSummary.total_gain_percent >= 0 ? (
-                  <TrendingUp className="h-4 w-4 text-green-600" />
-                ) : (
-                  <TrendingDown className="h-4 w-4 text-red-600" />
-                )}
-              </CardHeader>
-              <CardContent>
-                <div className={`text-2xl font-bold ${portfolioSummary.total_gain_percent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {portfolioSummary.total_gain_percent >= 0 ? '+' : ''}{portfolioSummary.total_gain_percent.toFixed(2)}%
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Overall return
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        <PortfolioSummary summary={portfolioSummary} />
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
@@ -179,16 +73,13 @@ function App() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <PortfolioOverview 
-              portfolioData={portfolioData} 
-              portfolioSummary={portfolioSummary}
-            />
+            <PortfolioOverview portfolioData={portfolioData} />
           </TabsContent>
 
           <TabsContent value="holdings" className="space-y-6">
-            <StockHoldings 
-              portfolioData={portfolioData} 
-              onRefresh={fetchPortfolioData}
+            <StockHoldings
+              portfolioData={portfolioData}
+              onRefresh={refresh}
               loading={loading}
             />
           </TabsContent>

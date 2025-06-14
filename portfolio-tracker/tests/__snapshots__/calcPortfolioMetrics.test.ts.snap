@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`calcPortfolioMetrics computes totals 1`] = `
+{
+  "holdings": [
+    {
+      "avg_cost_basis": 100,
+      "cost_basis": 1000,
+      "current_price": 150,
+      "current_value": 1500,
+      "quantity": 10,
+      "symbol": "AAPL",
+      "total_gain": 500,
+      "total_gain_percent": 50,
+    },
+    {
+      "avg_cost_basis": 200,
+      "cost_basis": 1000,
+      "current_price": 180,
+      "current_value": 900,
+      "quantity": 5,
+      "symbol": "MSFT",
+      "total_gain": -100,
+      "total_gain_percent": -10,
+    },
+  ],
+  "stocks_count": 2,
+  "total_cost_basis": 2000,
+  "total_gain": 400,
+  "total_gain_percent": 20,
+  "total_value": 2400,
+}
+`;

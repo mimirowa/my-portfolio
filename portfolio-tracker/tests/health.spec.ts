@@ -23,6 +23,5 @@ test('App fetches data from configured API base', async () => {
   await waitFor(() => expect(global.fetch).toHaveBeenCalled())
 
   expect(global.fetch).toHaveBeenCalledWith('http://test/stocks')
-  expect(global.fetch).toHaveBeenCalledWith('http://test/portfolio/summary')
   expect(global.fetch).toHaveBeenCalledWith('http://test/transactions')
 })
