@@ -81,3 +81,9 @@ def parse_raw(raw: str):
             if g:
                 invalid.append(g[0])
     return rows, invalid
+
+
+def parse_google_finance_import(raw: str):
+    rows, invalid_rows = parse_raw(raw)
+    print("INVALID:", invalid_rows, flush=True)
+    return rows, invalid_rows
