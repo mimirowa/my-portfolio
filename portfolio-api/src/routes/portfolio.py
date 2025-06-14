@@ -1,4 +1,5 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, abort
+from werkzeug.exceptions import HTTPException
 from src.models.user import db
 from src.models.portfolio import Stock, Transaction, CurrencyEnum, BASE_CURRENCY
 import requests
@@ -9,6 +10,11 @@ from src.data_api import ApiClient
 
 portfolio_bp = Blueprint('portfolio', __name__)
 client = ApiClient()
+
+# Return JSON for not found errors within this blueprint
+@portfolio_bp.errorhandler(404)
+def not_found(e):
+    return jsonify(message=getattr(e, "description", "Not Found")), 404
 
 @portfolio_bp.route('/stocks', methods=['GET'])
 def get_all_stocks():
@@ -270,51 +276,43 @@ def get_portfolio_summary():
 @portfolio_bp.route('/stocks/search/<symbol>', methods=['GET'])
 def search_stock(symbol):
     """Search for stock information and add to database if not exists"""
+    symbol = symbol.upper()
     try:
-        symbol = symbol.upper()
-        
-        # Check if stock already exists
-        existing_stock = Stock.query.filter_by(symbol=symbol).first()
-        if existing_stock:
-            return jsonify(existing_stock.to_dict())
-        
-        # Fetch from Yahoo Finance
-        try:
-            chart_data = client.call_api('YahooFinance/get_stock_chart', query={
-                'symbol': symbol,
-                'interval': '1d',
-                'range': '1d'
-            })
-            
-            if chart_data and 'chart' in chart_data and 'result' in chart_data['chart']:
-                result = chart_data['chart']['result'][0]
-                if 'meta' in result:
-                    meta = result['meta']
-                    current_price = meta.get('regularMarketPrice')
-                    company_name = meta.get('longName', meta.get('shortName', ''))
-                    
-                    # Create new stock entry
-                    stock = Stock(
-                        symbol=symbol,
-                        company_name=company_name,
-                        current_price=current_price,
-                        last_updated=datetime.utcnow()
-                    )
-                    
-                    db.session.add(stock)
-                    db.session.commit()
-                    
-                    return jsonify(stock.to_dict())
-                else:
-                    return jsonify({'error': 'Stock data not available'}), 404
-            else:
-                return jsonify({'error': 'Stock not found'}), 404
-                
-        except Exception as api_error:
-            return jsonify({'error': f'API error: {str(api_error)}'}), 500
-            
+        stock = Stock.query.filter_by(symbol=symbol).first()
+        if not stock:
+            try:
+                chart_data = client.call_api('YahooFinance/get_stock_chart', query={
+                    'symbol': symbol,
+                    'interval': '1d',
+                    'range': '1d'
+                })
+            except Exception:
+                return jsonify({'error': 'pricing down'}), 502
+
+            if not chart_data or 'chart' not in chart_data or 'result' not in chart_data['chart'] or not chart_data['chart']['result']:
+                abort(404, description='symbol not found')
+
+            result = chart_data['chart']['result'][0]
+            meta = result.get('meta', {})
+            if not meta:
+                abort(404, description='symbol not found')
+            current_price = meta.get('regularMarketPrice')
+            company_name = meta.get('longName', meta.get('shortName', ''))
+
+            stock = Stock(
+                symbol=symbol,
+                company_name=company_name,
+                current_price=current_price,
+                last_updated=datetime.utcnow()
+            )
+            db.session.add(stock)
+            db.session.commit()
+
+        return jsonify(stock.to_dict())
     except Exception as e:
         db.session.rollback()
+        if isinstance(e, HTTPException):
+            raise
         return jsonify({'error': str(e)}), 500
 
 

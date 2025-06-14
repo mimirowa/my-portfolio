@@ -118,3 +118,14 @@ def test_portfolio_history(client, app):
 
     assert data[-1]['with_contributions'] == 220.0
     assert data[-1]['market_value_only'] == 20.0
+
+
+def test_search_missing(client, monkeypatch):
+    def no_price(*args, **kwargs):
+        return {}
+
+    monkeypatch.setattr('src.routes.portfolio.client.call_api', no_price)
+
+    r = client.get('/api/portfolio/stocks/search/FOO')
+    assert r.status_code == 404
+    assert r.get_json()["message"] == "symbol not found"
