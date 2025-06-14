@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, abort, current_app
 from werkzeug.exceptions import HTTPException
 from src.models.user import db
-from src.models.portfolio import Stock, Transaction, CurrencyEnum, BASE_CURRENCY
+from src.models.portfolio import Stock, Transaction, CurrencyEnum, BASE_CURRENCY, PriceCache
 import requests
 from datetime import datetime, date, timedelta
 import os
@@ -119,6 +119,29 @@ def update_stock_price(symbol):
             
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@portfolio_bp.route('/prices/refresh', methods=['POST'])
+def refresh_prices():
+    """Refresh prices for all known tickers using AlphaVantage."""
+    symbols = [s.symbol for s in Stock.query.distinct(Stock.symbol)]
+    updated = 0
+    failed = []
+    for symbol in symbols:
+        try:
+            price = fetch_quote(symbol)
+        except QuoteAPIError:
+            price = None
+        if price is None:
+            failed.append(symbol)
+            continue
+        stock = Stock.query.filter_by(symbol=symbol).first()
+        stock.current_price = price
+        stock.last_updated = datetime.utcnow()
+        db.session.add(PriceCache(symbol=symbol, price=price))
+        updated += 1
+    db.session.commit()
+    return jsonify({"updated": updated, "failed": failed})
 
 @portfolio_bp.route('/transactions', methods=['GET'])
 def get_transactions():

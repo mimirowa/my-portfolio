@@ -73,3 +73,13 @@ class Transaction(db.Model):
     def total_value_base(self):
         return self.quantity * self.price_per_share * self.fx_rate
 
+
+class PriceCache(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    symbol = db.Column(db.String(10), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    fetched_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<PriceCache {self.symbol} {self.price}>"
+
