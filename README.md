@@ -35,7 +35,7 @@ uvicorn src.main:app --reload
 Each build stamps the current commit hash into the app. The footer will display
 the version like `v4e96b97` corresponding to the commit used for the build.
 
-The API reads optional environment variables like `SECRET_KEY`, `DATABASE_URL` and `BASE_CURRENCY`. Default values are provided so it will start without extra configuration. Historical price lookups use the minimal `ApiClient` in `portfolio-api/src/data_api.py`.
+The API reads optional environment variables like `SECRET_KEY`, `DATABASE_URL` and `BASE_CURRENCY`. Default values are provided so it will start without extra configuration. Historical price lookups use the minimal `ApiClient` in `portfolio-api/src/data_api.py`. To enable live quote lookups via Alpha Vantage set `ALPHAVANTAGE_API_KEY`.
 
 # My Portfolio
 

@@ -7,38 +7,10 @@ from datetime import datetime, date, timedelta
 import os
 
 from src.data_api import ApiClient
+from src.services.market_data import fetch_quote, QuoteAPIError
 
 portfolio_bp = Blueprint('portfolio', __name__)
 client = ApiClient()
-
-# --- price lookup helpers ----------------------------------------------------
-
-class QuoteAPIError(Exception):
-    """Raised when the external quote service fails"""
-
-
-def fetch_quote(symbol: str):
-    """Return the latest price for *symbol* or None if unavailable."""
-    # Avoid external calls when no API key is configured
-    if not getattr(client, "api_key", None):
-        return None
-    try:
-        data = client.call_api(
-            "YahooFinance/get_stock_chart",
-            query={"symbol": symbol, "interval": "1d", "range": "1d"},
-        )
-    except Exception as exc:  # network or API error
-        raise QuoteAPIError(str(exc)) from exc
-
-    if not data or "chart" not in data or "result" not in data["chart"]:
-        return None
-    results = data["chart"]["result"]
-    if not results:
-        return None
-    meta = results[0].get("meta", {})
-    if not meta:
-        return None
-    return meta.get("regularMarketPrice")
 
 # Return JSON for not found errors within this blueprint
 @portfolio_bp.errorhandler(404)
