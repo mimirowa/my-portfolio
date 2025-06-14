@@ -7,10 +7,10 @@ import { TrendingUp, TrendingDown, RefreshCw, ExternalLink } from 'lucide-react'
 import { getCurrencySymbol } from '@/lib/utils.js'
 import { post, fetchCurrentPrice } from '@/lib/api'
 import { calcPortfolioMetrics } from '@/lib/calcPortfolioMetrics'
-
-const BASE_CURRENCY = import.meta?.env?.VITE_BASE_CURRENCY || 'USD'
+import { useSettings } from '@/store/settingsSlice'
 
 function StockHoldings({ portfolioData, onRefresh, loading }) {
+  const { baseCurrency: BASE_CURRENCY } = useSettings()
   const [updatingStock, setUpdatingStock] = useState(null)
   const [prices, setPrices] = useState({})
 
@@ -127,6 +127,13 @@ function StockHoldings({ portfolioData, onRefresh, loading }) {
                   <TableCell className="text-right">
                     {getCurrencySymbol(BASE_CURRENCY)}
                     {stock.avg_cost_basis?.toFixed(2) || 'N/A'}
+                    {stock.transaction_currency &&
+                      stock.transaction_currency !== BASE_CURRENCY && (
+                        <div className="text-xs text-muted-foreground">
+                          {stock.transaction_currency}{' '}
+                          {stock.avg_cost_original?.toFixed(2)}
+                        </div>
+                      )}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">

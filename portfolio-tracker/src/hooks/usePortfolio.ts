@@ -1,12 +1,8 @@
 import { useEffect, useState } from 'react'
-import { fetchStocks, fetchTransactions, post } from '@/lib/api'
-import {
-  calcPortfolioMetrics,
-  HoldingMetrics,
-  PortfolioMetrics,
-} from '@/lib/calcPortfolioMetrics'
+import { fetchStocks, fetchTransactions, fetchSummary, post } from '@/lib/api'
+import { HoldingMetrics, PortfolioMetrics } from '@/lib/calcPortfolioMetrics'
 
-export function usePortfolio() {
+export function usePortfolio(baseCurrency: string) {
   const [holdings, setHoldings] = useState<HoldingMetrics[]>([])
   const [metrics, setMetrics] = useState<PortfolioMetrics | null>(null)
   const [transactions, setTransactions] = useState<any[]>([])
@@ -15,17 +11,19 @@ export function usePortfolio() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [stocksResp, txResp] = await Promise.all([
-        fetchStocks(),
+      const [stocksResp, txResp, summaryResp] = await Promise.all([
+        fetchStocks(baseCurrency),
         fetchTransactions(),
+        fetchSummary(baseCurrency),
       ])
-      const [stocks, txs] = await Promise.all([
+      const [stocksData, txs, summary] = await Promise.all([
         stocksResp.json(),
         txResp.json(),
+        summaryResp.json(),
       ])
-      const computed = calcPortfolioMetrics(stocks)
-      setHoldings(computed.holdings)
-      setMetrics(computed)
+      const stocks = stocksData.items || stocksData
+      setHoldings(stocks)
+      setMetrics(summary)
       setTransactions(txs)
     } finally {
       setLoading(false)
@@ -34,7 +32,7 @@ export function usePortfolio() {
 
   useEffect(() => {
     loadData()
-  }, [])
+  }, [baseCurrency])
 
   const refresh = loadData
 

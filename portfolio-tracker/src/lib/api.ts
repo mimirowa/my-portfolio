@@ -15,8 +15,10 @@ export const post = (path: string, body: any) =>
   })
 export const del = (path: string) => fetch(`${BASE}${path}`, { method: 'DELETE' })
 
-export const fetchStocks = () => fetch(`${BASE}/stocks`)
-export const fetchSummary = () => fetch(`${BASE}/summary`)
+export const fetchStocks = (base?: string) =>
+  fetch(`${BASE}/stocks${base ? `?base=${base}` : ''}`)
+export const fetchSummary = (base?: string) =>
+  fetch(`${BASE}/summary${base ? `?base=${base}` : ''}`)
 export const fetchTransactions = () => fetch(`${BASE}/transactions`)
 export const searchStock = (s: string) =>
   fetch(`${BASE}/stocks/search/${encodeURIComponent(s)}`)
