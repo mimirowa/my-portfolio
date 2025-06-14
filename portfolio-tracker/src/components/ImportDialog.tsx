@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea.jsx'
 import { Table, TableHeader, TableHead, TableRow, TableBody, TableCell } from '@/components/ui/table.jsx'
 import { Alert, AlertDescription } from '@/components/ui/alert.jsx'
 import { parseGoogleFinance, importGoogleFinance } from '@/lib/api'
+import { getCurrencySymbol } from '@/lib/utils.js'
 import { toast } from 'sonner'
 
 interface ImportDialogProps {
@@ -103,8 +104,8 @@ export default function ImportDialog({ open, onOpenChange, onImported }: ImportD
                       <TableCell>{r.action}</TableCell>
                       <TableCell>{new Date(r.date).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">{r.shares}</TableCell>
-                      <TableCell className="text-right">{r.price}</TableCell>
-                      <TableCell className="text-right">{r.amount}</TableCell>
+                      <TableCell className="text-right">{getCurrencySymbol(r.currency)}{r.price}</TableCell>
+                      <TableCell className="text-right">{getCurrencySymbol(r.currency)}{r.amount}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
