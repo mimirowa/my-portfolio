@@ -126,7 +126,7 @@ TSLA purchase
 def test_parse_activity_sample():
     rows, invalid = parse_raw(SAMPLE)
     assert not invalid
-    assert len(rows) == 20
+    assert len(rows) == 26
     first = rows[0]
     assert first["ticker"] == "SMCI"
     assert first["action"] == "sale"
@@ -134,3 +134,11 @@ def test_parse_activity_sample():
     assert first["shares"] == 26
     assert first["price"] == 41.57
     assert first["date"] == "2025-05-27"
+
+
+def test_parse_activity_sales():
+    rows, _ = parse_raw(SAMPLE)
+    sales = [r for r in rows if r["action"] == "sale"]
+    assert len(sales) == 7
+    tickers = {r["ticker"] for r in sales}
+    assert tickers == {"SMCI", "MSFT", "TSLA", "UBI"}
