@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input.jsx'
 import { Label } from '@/components/ui/label.jsx'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.jsx'
 import { Alert, AlertDescription } from '@/components/ui/alert.jsx'
-import { Loader2, Search } from 'lucide-react'
+import { Loader2, Search, HelpCircle } from 'lucide-react'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip.jsx'
 import { getCurrencySymbol } from '@/lib/utils.js'
 import { searchStock as fetchStock, addTransaction } from '@/lib/api'
 
@@ -18,7 +19,9 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
     quantity: '',
     price_per_share: '',
     transaction_date: new Date().toISOString().split('T')[0],
-    currency: BASE_CURRENCY
+    currency: BASE_CURRENCY,
+    fee_amount: '',
+    fee_currency: BASE_CURRENCY
   })
   const [loading, setLoading] = useState(false)
   const [searchingStock, setSearchingStock] = useState(false)
@@ -143,17 +146,31 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
       return
     }
 
+    if (formData.fee_amount && parseFloat(formData.fee_amount) < 0) {
+      setError('Fee must be a positive number')
+      return
+    }
+
     try {
       setLoading(true)
       setError('')
       
-      const response = await addTransaction({
+      const payload = {
         ...formData,
         symbol: formData.symbol.trim().toUpperCase(),
         quantity: parseInt(formData.quantity),
         price_per_share: parseFloat(formData.price_per_share),
         currency: formData.currency
-      })
+      }
+      if (formData.fee_amount) {
+        payload.fee_amount = parseFloat(formData.fee_amount)
+        payload.fee_currency = formData.fee_currency
+      } else {
+        delete payload.fee_amount
+        delete payload.fee_currency
+      }
+
+      const response = await addTransaction(payload)
       
       if (response.ok) {
         onTransactionAdded()
@@ -177,7 +194,9 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
       quantity: '',
       price_per_share: '',
       transaction_date: new Date().toISOString().split('T')[0],
-      currency: BASE_CURRENCY
+      currency: BASE_CURRENCY,
+      fee_amount: '',
+      fee_currency: BASE_CURRENCY
     })
     setError('')
     setStockInfo(null)
@@ -310,16 +329,58 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
             <Label htmlFor="price_per_share">
               Price per Share ({getCurrencySymbol(formData.currency)})
             </Label>
+          <Input
+            id="price_per_share"
+            type="number"
+            step="0.01"
+            min="0.01"
+            placeholder="e.g., 150.25"
+            value={formData.price_per_share}
+            onChange={(e) => handleInputChange('price_per_share', e.target.value)}
+          />
+        </div>
+
+        {/* Fee */}
+        <div className="space-y-2">
+          <Label htmlFor="fee_amount" className="flex items-center gap-1">
+            Fee
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="size-4 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                Broker commission, exchange fee, etc.
+              </TooltipContent>
+            </Tooltip>
+          </Label>
+          <div className="flex gap-2">
             <Input
-              id="price_per_share"
+              id="fee_amount"
               type="number"
               step="0.01"
-              min="0.01"
-              placeholder="e.g., 150.25"
-              value={formData.price_per_share}
-              onChange={(e) => handleInputChange('price_per_share', e.target.value)}
+              min="0"
+              placeholder="0.00"
+              value={formData.fee_amount}
+              onChange={(e) => handleInputChange('fee_amount', e.target.value)}
+              className="flex-1"
             />
+            <Select
+              value={formData.fee_currency}
+              onValueChange={(v) => handleInputChange('fee_currency', v)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="USD">USD</SelectItem>
+                <SelectItem value="EUR">EUR</SelectItem>
+                <SelectItem value="SEK">SEK</SelectItem>
+                <SelectItem value="GBP">GBP</SelectItem>
+                <SelectItem value="JPY">JPY</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+        </div>
 
           {/* Transaction Date */}
           <div className="space-y-2">
