@@ -59,6 +59,15 @@ def read_fixture(name: str) -> str:
         return fh.read()
 
 
+def test_avanza_snippet_parsed(client):
+    raw = read_fixture('avanza_snippet.txt')
+    resp = client.post('/api/import/google-finance/preview', json={'raw': raw})
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert len(data['rows']) >= 25
+    assert data['invalid_rows'] == []
+
+
 def test_preview_parses_fee_and_fx(client):
     raw = read_fixture('avrakningsnota_nr_250527106476.txt')
     resp = client.post('/api/import/google-finance/preview', json={'raw': raw})
