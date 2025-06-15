@@ -17,7 +17,7 @@ class CurrencyEnum(enum.Enum):
 class Stock(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     symbol = db.Column(db.String(10), nullable=False)
-    company_name = db.Column(db.String(200), nullable=True)
+    company_name = db.Column(db.String(128), nullable=True)
     current_price = db.Column(db.Float, nullable=True)
     last_updated = db.Column(db.DateTime, default=datetime.utcnow)
     

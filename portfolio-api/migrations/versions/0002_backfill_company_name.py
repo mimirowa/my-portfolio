@@ -10,8 +10,8 @@ from src.models.portfolio import Stock, Transaction
 from src.models.user import db
 from src.services.market_data import get_company_name
 
-revision = "0001"
-down_revision = None
+revision = "0002"
+down_revision = "0001"
 branch_labels = None
 depends_on = None
 

@@ -132,6 +132,9 @@ def update_stock_price(symbol):
                 if 'meta' in result and 'regularMarketPrice' in result['meta']:
                     current_price = result['meta']['regularMarketPrice']
                     company_name = result['meta'].get('longName', result['meta'].get('shortName', ''))
+                    if not company_name:
+                        from src.lib.market_data import get_company_name
+                        company_name = get_company_name(symbol)
                     
                     stock.current_price = current_price
                     stock.company_name = company_name
@@ -141,7 +144,7 @@ def update_stock_price(symbol):
                     return jsonify({
                         'symbol': stock.symbol,
                         'current_price': current_price,
-                        'company_name': company_name,
+                        'company': company_name,
                         'last_updated': stock.last_updated.isoformat()
                     })
                 else:
@@ -172,6 +175,9 @@ def refresh_prices():
             failed.append(symbol)
             continue
         stock = Stock.query.filter_by(symbol=symbol).first()
+        if stock and not stock.company_name:
+            from src.lib.market_data import get_company_name
+            stock.company_name = get_company_name(symbol)
         stock.current_price = price
         stock.last_updated = datetime.utcnow()
         db.session.add(
@@ -216,9 +222,13 @@ def add_transaction():
         # Get or create stock
         stock = Stock.query.filter_by(symbol=symbol).first()
         if not stock:
-            stock = Stock(symbol=symbol)
+            from src.lib.market_data import get_company_name
+            stock = Stock(symbol=symbol, company_name=get_company_name(symbol))
             db.session.add(stock)
             db.session.flush()  # Get the ID
+        elif not stock.company_name:
+            from src.lib.market_data import get_company_name
+            stock.company_name = get_company_name(symbol)
         
         # Parse transaction date
         try:
@@ -363,13 +373,17 @@ def search_stock(symbol):
     try:
         stock = Stock.query.filter_by(symbol=symbol.upper()).first()
         if stock:
-            return jsonify(stock.to_dict()), 200
+            data = stock.to_dict()
+            data["company"] = stock.company_name
+            return jsonify(data), 200
 
         price = fetch_quote(symbol)
         if price is None:
             abort(404, description="symbol not found")
 
-        return jsonify({"symbol": symbol.upper(), "price": price}), 200
+        from src.lib.market_data import get_company_name
+        company = get_company_name(symbol)
+        return jsonify({"symbol": symbol.upper(), "price": price, "company": company}), 200
 
     except QuoteAPIError as exc:
         current_app.logger.exception(exc)
