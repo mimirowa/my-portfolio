@@ -44,6 +44,7 @@ def get_all_stocks():
                 rate = 1.0
 
         stocks = Stock.query.all()
+        transactions = Transaction.query.order_by(Transaction.transaction_date).all()
         portfolio_data = []
         
         base_currency = os.environ.get("PORTFOLIO_BASE_CCY", PORTFOLIO_BASE_CCY)
@@ -67,14 +68,26 @@ def get_all_stocks():
                 # Determine transaction currency (use first buy)
                 tx_currency = buy_transactions[0].currency.value if buy_transactions else env_base
                 # Calculate average cost basis
+                def tx_fee_to_ccy(tx, ccy):
+                    fee = float(tx.fee_amount or 0)
+                    src = tx.fee_currency or tx.currency.value
+                    if fee and src != ccy:
+                        fee *= get_fx_rate(src, ccy, tx.transaction_date)
+                    return fee
+
+                def trade_cost(tx):
+                    fee_ccy = tx_fee_to_ccy(tx, tx.currency.value)
+                    return tx.quantity * tx.price_per_share + fee_ccy
+
                 total_cost = sum(
-                    t.quantity
-                    * t.price_per_share
+                    trade_cost(t)
                     * get_fx_rate(t.currency.value, base_currency, t.transaction_date)
                     for t in buy_transactions
                 )
                 avg_cost_basis = total_cost / total_bought if total_bought > 0 else 0
-                total_cost_orig = sum(t.quantity * t.price_per_share for t in buy_transactions if t.currency.value == tx_currency)
+                total_cost_orig = sum(
+                    trade_cost(t) for t in buy_transactions if t.currency.value == tx_currency
+                )
                 
                 # Calculate current value and gains
                 current_value = current_quantity * (stock.current_price or 0)
@@ -307,10 +320,33 @@ def get_portfolio_summary():
                 rate = 1.0
 
         stocks = Stock.query.all()
+        transactions = Transaction.query.order_by(Transaction.transaction_date).all()
         base_currency = os.environ.get("PORTFOLIO_BASE_CCY", PORTFOLIO_BASE_CCY)
         total_value = 0
         total_cost_basis = 0
         portfolio_stocks = []
+        total_fees = 0.0
+        contributions = 0.0
+
+        def tx_fee_to_ccy(tx, ccy):
+            fee = float(tx.fee_amount or 0)
+            src = tx.fee_currency or tx.currency.value
+            if fee and src != ccy:
+                fee *= get_fx_rate(src, ccy, tx.transaction_date)
+            return fee
+
+        for tx in transactions:
+            fee_base = tx_fee_to_ccy(tx, base_currency)
+            trade_base = tx.quantity * tx.price_per_share * get_fx_rate(
+                tx.currency.value,
+                base_currency,
+                tx.transaction_date,
+            )
+            total_fees += fee_base
+            if tx.transaction_type == 'buy':
+                contributions += trade_base + fee_base
+            else:
+                contributions -= trade_base - fee_base
         
         for stock in stocks:
             # Calculate current holdings
@@ -333,14 +369,19 @@ def get_portfolio_summary():
                 cost_basis = 0
                 
                 # FIFO method for cost basis calculation
+                def trade_cost(tx):
+                    fee_ccy = tx_fee_to_ccy(tx, tx.currency.value)
+                    return tx.quantity * tx.price_per_share + fee_ccy
+
                 for transaction in sorted(buy_transactions, key=lambda x: x.transaction_date):
                     if remaining_quantity <= 0:
                         break
-                    
+
                     shares_to_use = min(remaining_quantity, transaction.quantity)
+                    per_share = trade_cost(transaction) / transaction.quantity
                     cost_basis += (
                         shares_to_use
-                        * transaction.price_per_share
+                        * per_share
                         * get_fx_rate(
                             transaction.currency.value,
                             base_currency,
@@ -362,6 +403,7 @@ def get_portfolio_summary():
         
         total_gain = total_value - total_cost_basis
         total_gain_percent = (total_gain / total_cost_basis * 100) if total_cost_basis > 0 else 0
+        net_gain_after_fees = total_value - contributions
 
         return jsonify({
             'base_currency': requested_base,
@@ -369,6 +411,8 @@ def get_portfolio_summary():
             'total_cost_basis': round(total_cost_basis * rate, 2),
             'total_gain': round(total_gain * rate, 2),
             'total_gain_percent': round(total_gain_percent, 2),
+            'total_fees_paid': round(total_fees * rate, 2),
+            'net_gain_after_fees': round(net_gain_after_fees * rate, 2),
             'stocks_count': len(portfolio_stocks),
             'stocks': portfolio_stocks
         })
@@ -428,25 +472,30 @@ def get_portfolio_history():
         holdings = {sid: 0 for sid in stocks}
         contributions = 0.0
 
+        def tx_fee_to_ccy(tx, ccy):
+            fee = float(tx.fee_amount or 0)
+            src = tx.fee_currency or tx.currency.value
+            if fee and src != ccy:
+                fee *= get_fx_rate(src, ccy, tx.transaction_date)
+            return fee
+
         idx = 0
         current = start_date
         while current <= end_date:
             while idx < len(transactions) and transactions[idx].transaction_date <= current:
                 t = transactions[idx]
+                fee_base = tx_fee_to_ccy(t, base_currency)
+                trade_base = (
+                    t.quantity
+                    * t.price_per_share
+                    * get_fx_rate(t.currency.value, base_currency, t.transaction_date)
+                )
                 if t.transaction_type == 'buy':
                     holdings[t.stock_id] = holdings.get(t.stock_id, 0) + t.quantity
-                    contributions += (
-                        t.quantity
-                        * t.price_per_share
-                        * get_fx_rate(t.currency.value, base_currency, t.transaction_date)
-                    )
+                    contributions += trade_base + fee_base
                 else:
                     holdings[t.stock_id] = holdings.get(t.stock_id, 0) - t.quantity
-                    contributions -= (
-                        t.quantity
-                        * t.price_per_share
-                        * get_fx_rate(t.currency.value, base_currency, t.transaction_date)
-                    )
+                    contributions -= trade_base - fee_base
                 idx += 1
 
             market_value = 0.0

@@ -18,6 +18,8 @@ export interface PortfolioMetrics {
   total_cost_basis: number
   total_gain: number
   total_gain_percent: number
+  total_fees_paid: number
+  net_gain_after_fees: number
   stocks_count: number
   holdings: HoldingMetrics[]
 }
@@ -49,6 +51,8 @@ export function calcPortfolioMetrics(holdings: Holding[]): PortfolioMetrics {
     total_cost_basis: totalCostBasis,
     total_gain: totalGain,
     total_gain_percent: totalGainPercent,
+    total_fees_paid: 0,
+    net_gain_after_fees: totalGain,
     stocks_count: metrics.length,
     holdings: metrics,
   }
