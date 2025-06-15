@@ -40,3 +40,13 @@ test('preview badge shows parsed and invalid counts', async () => {
   )
   expect(badge.textContent).toBe('Parsed 3 rows • 2 invalid')
 })
+
+test('xlsx file upload triggers preview', async () => {
+  const user = userEvent.setup()
+  render(<ImportDialog open={true} onOpenChange={() => {}} onImported={() => {}} />)
+  const input = screen.getByTestId('file-input') as HTMLInputElement
+  const file = new File(['dummy'], 'sample.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  await user.upload(input, file)
+  await screen.findByText((_, el) => el?.textContent === 'Parsed 3 rows • 2 invalid')
+  expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/xlsx/preview'), expect.any(Object))
+})

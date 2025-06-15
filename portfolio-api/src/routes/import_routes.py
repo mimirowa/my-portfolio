@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify
 from src.models.portfolio import Stock, Transaction, CurrencyEnum
 from src.models.user import db
 from src.services.google_finance import parse_raw
+from src.services.xlsx_import import parse_xlsx
 
 import_bp = Blueprint('import', __name__)
 
@@ -61,3 +62,12 @@ def google_finance_import():
         ids.append(tx.id)
     db.session.commit()
     return jsonify({"inserted_ids": ids, "invalid_rows": invalid, "duplicates_skipped": duplicates})
+
+
+@import_bp.route('/xlsx/preview', methods=['POST'])
+def xlsx_preview():
+    file = request.files.get('file')
+    if not file:
+        return jsonify({'error': 'No file uploaded'}), 400
+    rows, invalid = parse_xlsx(file)
+    return jsonify({"rows": rows, "invalid_rows": invalid})

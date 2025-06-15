@@ -50,3 +50,14 @@ export async function importGoogleFinance(raw: string) {
   if (!resp.ok) throw new Error('Failed to import')
   return resp.json()
 }
+
+export async function parseXlsx(file: File) {
+  const form = new FormData()
+  form.append('file', file)
+  const resp = await fetch(`${IMPORT_API}/xlsx/preview`, {
+    method: 'POST',
+    body: form,
+  })
+  if (!resp.ok) throw new Error('Failed to parse')
+  return resp.json()
+}
