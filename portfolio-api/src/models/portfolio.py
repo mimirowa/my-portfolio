@@ -42,10 +42,11 @@ class Transaction(db.Model):
     transaction_type = db.Column(db.String(10), nullable=False)  # 'buy' or 'sell'
     quantity = db.Column(db.Integer, nullable=False)
     price_per_share = db.Column(db.Float, nullable=False)
-    currency = db.Column(db.Enum(CurrencyEnum), nullable=False, default=BASE_CURRENCY)
+    currency = db.Column(db.String(3), nullable=False, default=BASE_CURRENCY)
     fee_amount = db.Column(db.Numeric(14, 4), nullable=True)
     fee_currency = db.Column(db.String(3), nullable=True)
-    fx_rate = db.Column(db.Numeric(14, 6), nullable=True, default=1.0)
+    fx_rate = db.Column(db.Numeric(14, 6), nullable=True)
+    fx_error = db.Column(db.String(128), nullable=True)
     deal_amount = db.Column(db.Numeric(14, 2), nullable=True)
     deal_currency = db.Column(db.String(3), nullable=True)
     transaction_date = db.Column(db.Date, nullable=False)
@@ -62,10 +63,11 @@ class Transaction(db.Model):
             'transaction_type': self.transaction_type,
             'quantity': self.quantity,
             'price_per_share': self.price_per_share,
-            'currency': self.currency.value,
+            'currency': self.currency,
             'fee_amount': float(self.fee_amount) if self.fee_amount is not None else None,
             'fee_currency': self.fee_currency,
             'fx_rate': float(self.fx_rate) if self.fx_rate is not None else None,
+            'fx_error': self.fx_error,
             'deal_amount': float(self.deal_amount) if self.deal_amount is not None else None,
             'deal_currency': self.deal_currency,
             'total_value': self.quantity * self.price_per_share,

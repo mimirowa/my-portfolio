@@ -1,6 +1,7 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify
-from src.models.portfolio import Stock, Transaction, CurrencyEnum
+from src.models.portfolio import Stock, Transaction
+from src.lib.fx import validate_currency_code
 from src.models.user import db
 from src.services.google_finance import parse_raw
 from src.services.xlsx_import import parse_xlsx
@@ -42,14 +43,17 @@ def google_finance_import():
             duplicates += 1
             continue
         currency_key = row.get('currency', 'USD')
-        if currency_key not in CurrencyEnum.__members__:
+        try:
+            validate_currency_code(currency_key)
+        except Exception:
             currency_key = 'USD'
         tx = Transaction(
             stock_id=stock.id,
             transaction_type=side,
             quantity=int(row['shares']),
             price_per_share=float(row['price']),
-            currency=CurrencyEnum[currency_key],
+            currency=currency_key,
+            fx_error=None,
             fx_rate=1.0,
             fee_amount=row.get('fee_amount'),
             fee_currency=row.get('fee_currency'),

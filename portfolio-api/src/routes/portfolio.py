@@ -9,7 +9,12 @@ from src.models.portfolio import (
     BASE_CURRENCY,
 )
 from src.config import PORTFOLIO_BASE_CCY
-from src.lib.fx import get_fx_rate
+from src.lib.fx import (
+    get_fx_rate,
+    UnsupportedCurrency,
+    FxDownloadError,
+    validate_currency_code,
+)
 import requests
 from datetime import datetime, date, timedelta
 import os
@@ -66,27 +71,33 @@ def get_all_stocks():
             
             if current_quantity > 0:  # Only include stocks we currently own
                 # Determine transaction currency (use first buy)
-                tx_currency = buy_transactions[0].currency.value if buy_transactions else env_base
+                def safe_rate(a, b, d):
+                    try:
+                        return get_fx_rate(a, b, d)
+                    except FxDownloadError:
+                        return 1.0
+
+                tx_currency = buy_transactions[0].currency if buy_transactions else env_base
                 # Calculate average cost basis
                 def tx_fee_to_ccy(tx, ccy):
                     fee = float(tx.fee_amount or 0)
-                    src = tx.fee_currency or tx.currency.value
+                    src = tx.fee_currency or tx.currency
                     if fee and src != ccy:
-                        fee *= get_fx_rate(src, ccy, tx.transaction_date)
+                        fee *= safe_rate(src, ccy, tx.transaction_date)
                     return fee
 
                 def trade_cost(tx):
-                    fee_ccy = tx_fee_to_ccy(tx, tx.currency.value)
+                    fee_ccy = tx_fee_to_ccy(tx, tx.currency)
                     return tx.quantity * tx.price_per_share + fee_ccy
 
                 total_cost = sum(
                     trade_cost(t)
-                    * get_fx_rate(t.currency.value, base_currency, t.transaction_date)
+                    * safe_rate(t.currency, base_currency, t.transaction_date)
                     for t in buy_transactions
                 )
                 avg_cost_basis = total_cost / total_bought if total_bought > 0 else 0
                 total_cost_orig = sum(
-                    trade_cost(t) for t in buy_transactions if t.currency.value == tx_currency
+                    trade_cost(t) for t in buy_transactions if t.currency == tx_currency
                 )
 
                 fees_total = sum(
@@ -235,7 +246,9 @@ def add_transaction():
 
         base_currency = os.environ.get('PORTFOLIO_BASE_CCY', PORTFOLIO_BASE_CCY)
         currency = data.get('currency', base_currency).upper()
-        if currency not in CurrencyEnum.__members__:
+        try:
+            validate_currency_code(currency)
+        except UnsupportedCurrency:
             return jsonify({'error': 'Unsupported currency'}), 400
 
         # Get or create stock
@@ -256,11 +269,15 @@ def add_transaction():
             return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
         
         fx_rate = 1.0
+        fx_error = None
         if currency != base_currency:
             try:
                 fx_rate = get_fx_rate(currency, base_currency, transaction_date)
-            except Exception:
-                return jsonify({'error': 'Failed to fetch FX rate'}), 500
+            except FxDownloadError as exc:
+                fx_error = str(exc)
+                fx_rate = None
+            except UnsupportedCurrency:
+                return jsonify({'error': 'Unsupported currency'}), 400
 
         fee_amount = data.get('fee_amount')
         fee_currency = data.get('fee_currency')
@@ -272,7 +289,8 @@ def add_transaction():
             transaction_type=data['transaction_type'].lower(),
             quantity=int(data['quantity']),
             price_per_share=float(data['price_per_share']),
-            currency=CurrencyEnum[currency],
+            currency=currency,
+            fx_error=fx_error,
             fx_rate=fx_rate,
             fee_amount=fee_amount,
             fee_currency=fee_currency,
@@ -283,8 +301,13 @@ def add_transaction():
         
         db.session.add(transaction)
         db.session.commit()
-        
-        return jsonify(transaction.to_dict()), 201
+
+        body = transaction.to_dict()
+        status = 201
+        if fx_rate is None:
+            status = 202
+            body["warning"] = "FX rate unavailable; please enter manually later"
+        return jsonify(body), status
         
     except Exception as e:
         db.session.rollback()
@@ -334,17 +357,23 @@ def get_portfolio_summary():
         total_fees = 0.0
         contributions = 0.0
 
+        def safe_rate(a, b, d):
+            try:
+                return get_fx_rate(a, b, d)
+            except FxDownloadError:
+                return 1.0
+
         def tx_fee_to_ccy(tx, ccy):
             fee = float(tx.fee_amount or 0)
-            src = tx.fee_currency or tx.currency.value
+            src = tx.fee_currency or tx.currency
             if fee and src != ccy:
-                fee *= get_fx_rate(src, ccy, tx.transaction_date)
+                fee *= safe_rate(src, ccy, tx.transaction_date)
             return fee
 
         for tx in transactions:
             fee_base = tx_fee_to_ccy(tx, base_currency)
-            trade_base = tx.quantity * tx.price_per_share * get_fx_rate(
-                tx.currency.value,
+            trade_base = tx.quantity * tx.price_per_share * safe_rate(
+                tx.currency,
                 base_currency,
                 tx.transaction_date,
             )
@@ -376,7 +405,7 @@ def get_portfolio_summary():
                 
                 # FIFO method for cost basis calculation
                 def trade_cost(tx):
-                    fee_ccy = tx_fee_to_ccy(tx, tx.currency.value)
+                    fee_ccy = tx_fee_to_ccy(tx, tx.currency)
                     return tx.quantity * tx.price_per_share + fee_ccy
 
                 for transaction in sorted(buy_transactions, key=lambda x: x.transaction_date):
@@ -388,8 +417,8 @@ def get_portfolio_summary():
                     cost_basis += (
                         shares_to_use
                         * per_share
-                        * get_fx_rate(
-                            transaction.currency.value,
+                        * safe_rate(
+                            transaction.currency,
                             base_currency,
                             transaction.transaction_date,
                         )
@@ -478,11 +507,17 @@ def get_portfolio_history():
         holdings = {sid: 0 for sid in stocks}
         contributions = 0.0
 
+        def safe_rate(a, b, d):
+            try:
+                return get_fx_rate(a, b, d)
+            except FxDownloadError:
+                return 1.0
+
         def tx_fee_to_ccy(tx, ccy):
             fee = float(tx.fee_amount or 0)
-            src = tx.fee_currency or tx.currency.value
+            src = tx.fee_currency or tx.currency
             if fee and src != ccy:
-                fee *= get_fx_rate(src, ccy, tx.transaction_date)
+                fee *= safe_rate(src, ccy, tx.transaction_date)
             return fee
 
         idx = 0
@@ -494,7 +529,7 @@ def get_portfolio_history():
                 trade_base = (
                     t.quantity
                     * t.price_per_share
-                    * get_fx_rate(t.currency.value, base_currency, t.transaction_date)
+                    * safe_rate(t.currency, base_currency, t.transaction_date)
                 )
                 if t.transaction_type == 'buy':
                     holdings[t.stock_id] = holdings.get(t.stock_id, 0) + t.quantity

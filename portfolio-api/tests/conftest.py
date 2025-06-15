@@ -12,6 +12,7 @@ from src.models.user import db
 from src.routes.user import user_bp
 from src.routes.portfolio import portfolio_bp
 from src.routes.import_routes import import_bp
+from src.routes.fx import fx_bp
 
 @pytest.fixture
 def app():
@@ -26,6 +27,7 @@ def app():
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(portfolio_bp, url_prefix='/api/portfolio')
     app.register_blueprint(import_bp, url_prefix='/api/import')
+    app.register_blueprint(fx_bp, url_prefix='/api/fx')
     yield app
 
 @pytest.fixture
