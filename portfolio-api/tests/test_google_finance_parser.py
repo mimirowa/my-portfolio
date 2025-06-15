@@ -1,4 +1,5 @@
 import textwrap
+from pathlib import Path
 from src.services.google_finance import parse_raw
 
 SAMPLE = textwrap.dedent("""
@@ -159,3 +160,31 @@ def test_parse_pln_activity():
     assert row["currency"] == "PLN"
     assert row["shares"] == 10
     assert row["price"] == 100.0
+
+
+def read_fixture(name: str) -> str:
+    path = Path(__file__).parent / "fixtures" / name
+    with open(path, "r", encoding="utf-8") as fh:
+        return fh.read()
+
+
+def test_parse_avanza_fee_fx():
+    raw = read_fixture("avrakningsnota_nr_250527106476.txt")
+    rows, invalid = parse_raw(raw)
+    assert not invalid
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["fee_amount"] == 1.5
+    assert row["fee_currency"] == "USD"
+    assert row["fx_rate"] == 11.5
+
+
+def test_parse_seb_fee_fx():
+    raw = read_fixture("2025-05-21-1472929072.txt")
+    rows, invalid = parse_raw(raw)
+    assert not invalid
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["fee_amount"] == 2.0
+    assert row["fee_currency"] == "EUR"
+    assert row["fx_rate"] == 11.2

@@ -1,5 +1,6 @@
 import json
 from datetime import date
+from pathlib import Path
 
 def sample_raw():
     return """AAPL purchase
@@ -50,3 +51,19 @@ def test_invalid_lines_returned(client):
     data = resp.get_json()
     assert data['rows'] == []
     assert len(data['invalid_rows']) >= 1
+
+
+def read_fixture(name: str) -> str:
+    path = Path(__file__).parent / 'fixtures' / name
+    with open(path, 'r', encoding='utf-8') as fh:
+        return fh.read()
+
+
+def test_preview_parses_fee_and_fx(client):
+    raw = read_fixture('avrakningsnota_nr_250527106476.txt')
+    resp = client.post('/api/import/google-finance/preview', json={'raw': raw})
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert len(data['invalid_rows']) == 0
+    assert data['rows'][0]['fee_amount'] == 1.5
+    assert data['rows'][0]['fx_rate'] == 11.5

@@ -72,8 +72,40 @@ def _parse_group(lines: list[str]):
         "amount": round((shares or 0) * (price or 0), 2),
         "currency": currency,
     }
+
     if None in row.values():
         return None
+
+    # Parse any additional lines for fee and fx rate information
+    for extra in lines[3:]:
+        m_fee = re.search(r"(Courtage|Kurtage).*?(-?[\d.,\u202f]+)", extra, re.I)
+        if m_fee:
+            fee = _parse_number(m_fee.group(2))
+            if fee is not None:
+                row["fee_amount"] = abs(fee)
+                for token, code in {
+                    "€": "EUR",
+                    "$": "USD",
+                    "£": "GBP",
+                    "¥": "JPY",
+                    "zł": "PLN",
+                    "USD": "USD",
+                    "EUR": "EUR",
+                    "GBP": "GBP",
+                    "JPY": "JPY",
+                    "SEK": "SEK",
+                    "PLN": "PLN",
+                    "kr": "SEK",
+                }.items():
+                    if token in extra:
+                        row["fee_currency"] = code
+                        break
+        m_fx = re.search(r"(Växlingskurs|VALUTAKURS).*?(-?[\d.,\u202f]+)", extra, re.I)
+        if m_fx:
+            fx = _parse_number(m_fx.group(2))
+            if fx is not None:
+                row["fx_rate"] = fx
+
     return row
 
 
