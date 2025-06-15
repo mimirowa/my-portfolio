@@ -133,6 +133,7 @@ The app will be available at the printed Vite dev server address (usually `http:
 | `POST /api/portfolio/transactions` | Add a transaction |
 | `DELETE /api/portfolio/transactions/<id>` | Delete a transaction |
 | `GET /api/portfolio/summary` | Portfolio summary totals |
+| | Returns `total_fees_paid` and `net_gain_after_fees` fields |
 | `GET /api/portfolio/stocks/search/<symbol>` | Search and add a stock |
 
 ### User Management Endpoints
