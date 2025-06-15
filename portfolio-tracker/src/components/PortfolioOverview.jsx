@@ -5,10 +5,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import PortfolioHistoryChart from './PortfolioHistoryChart'
 import { sortPerformanceData } from '@/lib/sort.js'
 import { calcPortfolioMetrics } from '@/lib/calcPortfolioMetrics'
+import { useSettings } from '@/store/settingsSlice'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C']
 
 function PortfolioOverview({ portfolioData }) {
+  const { includeFees } = useSettings()
   const metrics = calcPortfolioMetrics(portfolioData || [])
   const portfolioSummary = metrics
   const data = metrics.holdings
@@ -39,7 +41,7 @@ function PortfolioOverview({ portfolioData }) {
   // Prepare data for performance chart
   const performanceData = data.map(stock => ({
     symbol: stock.symbol,
-    gain: stock.total_gain,
+    gain: includeFees ? stock.total_gain - (stock.fees_paid ?? 0) : stock.total_gain,
     gainPercent: stock.total_gain_percent,
     currentValue: stock.current_value
   }))

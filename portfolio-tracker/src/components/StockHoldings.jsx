@@ -10,7 +10,7 @@ import { calcPortfolioMetrics } from '@/lib/calcPortfolioMetrics'
 import { useSettings } from '@/store/settingsSlice'
 
 function StockHoldings({ portfolioData, onRefresh, loading }) {
-  const { baseCurrency: BASE_CURRENCY } = useSettings()
+  const { baseCurrency: BASE_CURRENCY, includeFees } = useSettings()
   const [updatingStock, setUpdatingStock] = useState(null)
   const [prices, setPrices] = useState({})
 
@@ -100,6 +100,7 @@ function StockHoldings({ portfolioData, onRefresh, loading }) {
                 <TableHead className="text-right">Avg Cost</TableHead>
                 <TableHead className="text-right">Current Price</TableHead>
                 <TableHead className="text-right">Current Value</TableHead>
+                <TableHead className="text-right">Fees</TableHead>
                 <TableHead className="text-right">Total Gain/Loss</TableHead>
                 <TableHead className="text-right">Return %</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
@@ -157,15 +158,19 @@ function StockHoldings({ portfolioData, onRefresh, loading }) {
                     {stock.current_value?.toLocaleString() || 'N/A'}
                   </TableCell>
                   <TableCell className="text-right">
+                    {getCurrencySymbol(BASE_CURRENCY)}
+                    {stock.fees_paid?.toLocaleString() || '0'}
+                  </TableCell>
+                  <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      {stock.total_gain >= 0 ? (
+                      {(includeFees ? stock.total_gain - (stock.fees_paid ?? 0) : stock.total_gain) >= 0 ? (
                         <TrendingUp className="h-4 w-4 text-green-600" />
                       ) : (
                         <TrendingDown className="h-4 w-4 text-red-600" />
                       )}
-                      <span className={`font-medium ${stock.total_gain >= 0 ? 'text-green-600' : 'text-red-600'}`}> 
+                      <span className={`font-medium ${(includeFees ? stock.total_gain - (stock.fees_paid ?? 0) : stock.total_gain) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {getCurrencySymbol(BASE_CURRENCY)}
-                        {stock.total_gain?.toLocaleString() || 'N/A'}
+                        {(includeFees ? stock.total_gain - (stock.fees_paid ?? 0) : stock.total_gain)?.toLocaleString() || 'N/A'}
                       </span>
                     </div>
                   </TableCell>
@@ -203,7 +208,7 @@ function StockHoldings({ portfolioData, onRefresh, loading }) {
 
         {/* Summary Row */}
         <div className="mt-6 pt-4 border-t">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
             <div>
               <p className="text-gray-600">Total Positions</p>
               <p className="font-medium">{metrics.stocks_count}</p>
@@ -214,20 +219,27 @@ function StockHoldings({ portfolioData, onRefresh, loading }) {
                 {metrics.holdings.reduce((sum, s) => sum + s.quantity, 0).toLocaleString()}
               </p>
             </div>
-            <div>
-              <p className="text-gray-600">Total Value</p>
-              <p className="font-medium">
-                {getCurrencySymbol(BASE_CURRENCY)}
-                {metrics.total_value.toLocaleString()}
-              </p>
-            </div>
-            <div>
-              <p className="text-gray-600">Total Gain/Loss</p>
-              <p className={`font-medium ${metrics.total_gain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {getCurrencySymbol(BASE_CURRENCY)}
-                {metrics.total_gain.toLocaleString()}
-              </p>
-            </div>
+          <div>
+            <p className="text-gray-600">Total Value</p>
+            <p className="font-medium">
+              {getCurrencySymbol(BASE_CURRENCY)}
+              {metrics.total_value.toLocaleString()}
+            </p>
+          </div>
+          <div>
+            <p className="text-gray-600">Total Fees</p>
+            <p className="font-medium">
+              {getCurrencySymbol(BASE_CURRENCY)}
+              {metrics.total_fees_paid.toLocaleString()}
+            </p>
+          </div>
+          <div>
+            <p className="text-gray-600">Total Gain/Loss</p>
+            <p className={`font-medium ${(includeFees ? metrics.net_gain_after_fees : metrics.total_gain) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {getCurrencySymbol(BASE_CURRENCY)}
+              {(includeFees ? metrics.net_gain_after_fees : metrics.total_gain).toLocaleString()}
+            </p>
+          </div>
           </div>
         </div>
       </CardContent>
