@@ -43,7 +43,11 @@ class Transaction(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     price_per_share = db.Column(db.Float, nullable=False)
     currency = db.Column(db.Enum(CurrencyEnum), nullable=False, default=BASE_CURRENCY)
-    fx_rate = db.Column(db.Float, nullable=False, default=1.0)  # rate to convert to base currency
+    fee_amount = db.Column(db.Numeric(14, 4), nullable=True)
+    fee_currency = db.Column(db.String(3), nullable=True)
+    fx_rate = db.Column(db.Numeric(14, 6), nullable=True, default=1.0)
+    deal_amount = db.Column(db.Numeric(14, 2), nullable=True)
+    deal_currency = db.Column(db.String(3), nullable=True)
     transaction_date = db.Column(db.Date, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -59,7 +63,11 @@ class Transaction(db.Model):
             'quantity': self.quantity,
             'price_per_share': self.price_per_share,
             'currency': self.currency.value,
-            'fx_rate': self.fx_rate,
+            'fee_amount': float(self.fee_amount) if self.fee_amount is not None else None,
+            'fee_currency': self.fee_currency,
+            'fx_rate': float(self.fx_rate) if self.fx_rate is not None else None,
+            'deal_amount': float(self.deal_amount) if self.deal_amount is not None else None,
+            'deal_currency': self.deal_currency,
             'total_value': self.quantity * self.price_per_share,
             'total_value_base': self.total_value_base,
             'transaction_date': self.transaction_date.isoformat() if self.transaction_date else None,
@@ -72,7 +80,8 @@ class Transaction(db.Model):
 
     @property
     def total_value_base(self):
-        return self.quantity * self.price_per_share * self.fx_rate
+        rate = float(self.fx_rate) if self.fx_rate is not None else 1.0
+        return self.quantity * self.price_per_share * rate
 
 
 class PriceCache(db.Model):

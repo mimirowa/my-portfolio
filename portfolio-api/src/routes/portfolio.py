@@ -243,6 +243,11 @@ def add_transaction():
             except Exception:
                 return jsonify({'error': 'Failed to fetch FX rate'}), 500
 
+        fee_amount = data.get('fee_amount')
+        fee_currency = data.get('fee_currency')
+        deal_amount = data.get('deal_amount')
+        deal_currency = data.get('deal_currency')
+
         transaction = Transaction(
             stock_id=stock.id,
             transaction_type=data['transaction_type'].lower(),
@@ -250,6 +255,10 @@ def add_transaction():
             price_per_share=float(data['price_per_share']),
             currency=CurrencyEnum[currency],
             fx_rate=fx_rate,
+            fee_amount=fee_amount,
+            fee_currency=fee_currency,
+            deal_amount=deal_amount,
+            deal_currency=deal_currency,
             transaction_date=transaction_date
         )
         

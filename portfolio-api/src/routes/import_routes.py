@@ -50,6 +50,10 @@ def google_finance_import():
             price_per_share=float(row['price']),
             currency=CurrencyEnum[currency_key],
             fx_rate=1.0,
+            fee_amount=row.get('fee_amount'),
+            fee_currency=row.get('fee_currency'),
+            deal_amount=row.get('deal_amount'),
+            deal_currency=row.get('deal_currency'),
             transaction_date=date_obj,
         )
         db.session.add(tx)
