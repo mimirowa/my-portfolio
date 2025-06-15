@@ -5,6 +5,7 @@ from src.lib.fx import validate_currency_code
 from src.models.user import db
 from src.services.google_finance import parse_raw
 from src.services.xlsx_import import parse_xlsx
+from src.importers.avanza_text import detect_avanza_text, parse_avanza_text
 
 import_bp = Blueprint('import', __name__)
 
@@ -13,7 +14,10 @@ import_bp = Blueprint('import', __name__)
 def google_finance_preview():
     data = request.get_json(force=True)
     raw = data.get('raw', '')
-    rows, invalid = parse_raw(raw)
+    if detect_avanza_text(raw):
+        rows, invalid = parse_avanza_text(raw)
+    else:
+        rows, invalid = parse_raw(raw)
     return jsonify({"rows": rows, "invalid_rows": invalid})
 
 

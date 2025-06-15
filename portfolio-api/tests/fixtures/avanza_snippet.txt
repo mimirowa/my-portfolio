@@ -1,0 +1,364 @@
+Genomförda transaktioner
+NotaMer
+2025-06-04 
+7689420
+Sälj
+Thematica - Future Mobility Retl SEK Acc
+
+−168,589
+
+170,01 SEK
+
+28 661,82 SEK
+
+
+2025-05-21 
+7689420
+Köp
+Alphabet Inc Class C
+
+36
+
+165,22 USD
+
+−57 213,82 SEK
+
+
+2025-04-07 
+7689420
+Sälj
+Tesla
+
+−26
+
+228,32 USD
+
+59 451,91 SEK
+
+
+2025-04-03 
+7689420
+Utdelning
+NVIDIA
+
+61
+
+0,01 USD
+
+5,87 SEK
+
+
+2025-04-03 
+7689420
+Utländsk källskatt
+NVIDIA
+
+61
+
+-
+
+−0,88 SEK
+
+
+2025-03-31 
+7689420
+Utlåningsränta
+-
+
+-
+
+−377,75 SEK
+
+
+2025-03-26 
+7689420
+InsättningDirektinsättning från SEB
+
+-
+
+-
+
+80 000,00 SEK
+
+
+2025-02-28 
+7689420
+Utlåningsränta
+-
+
+-
+
+−452,24 SEK
+
+
+2025-01-31 
+7689420
+Utlåningsränta
+-
+
+-
+
+−46,26 SEK
+
+
+2025-01-27 
+7689420
+Köp
+NVIDIA
+
+61
+
+117,85 USD
+
+−79 040,90 SEK
+
+
+2025-01-27 
+7689420
+Köp
+Thematica - Future Mobility Retl SEK Acc
+
+43,549
+
+206,66 SEK
+
+−8 999,84 SEK
+
+
+2025-01-27 
+7689420
+Överföring från kreditkontoÖverföring från Kreditdepån
+
+-
+
+-
+
+78 660,70 SEK
+
+
+2025-01-27 
+7689420
+Överföring till ISK/KF-depånÖverföring till ISK/KF-depån
+
+-
+
+-
+
+−78 660,70 SEK
+
+
+2024-11-22 
+7689420
+UttagUttag till 53683732326
+
+-
+
+-
+
+−660 000,00 SEK
+
+
+2024-07-26 
+7689420
+Utdelning
+Walt Disney
+
+114
+
+0,45 USD
+
+551,71 SEK
+
+
+2024-07-26 
+7689420
+Utländsk källskatt
+Walt Disney
+
+114
+
+-
+
+−82,76 SEK
+
+
+2024-07-16 
+7689420
+Sälj
+Storebrand USA A SEK
+
+−158,9269
+
+596,73 SEK
+
+94 836,32 SEK
+
+
+2024-07-12 
+7689420
+Sälj
+Alphabet Inc Class C
+
+−78
+
+188,00 USD
+
+153 611,94 SEK
+
+
+2024-07-12 
+7689420
+Sälj
+Walt Disney
+
+−114
+
+97,50 USD
+
+116 434,41 SEK
+
+
+2024-06-28 
+7689420
+KreditsettlingNollställning av outnyttjad kredit
+
+-
+
+-
+
+−19 011,55 SEK
+
+
+2024-06-28 
+7689420
+KreditsettlingNollställning av outnyttjad kredit
+
+-
+
+-
+
+19 011,55 SEK
+
+
+2024-06-18 
+7689420
+Utdelning
+Alphabet Inc Class C
+
+78
+
+0,20 USD
+
+162,72 SEK
+
+
+2024-06-18 
+7689420
+Utländsk källskatt
+Alphabet Inc Class C
+
+78
+
+-
+
+−24,41 SEK
+
+
+2024-06-12 
+7689420
+Rensning av värdepapperBortbokning - Tesla Rösträttsberättigande
+
+−26
+
+-
+
+-
+
+
+2024-05-31 
+7689420
+Inlåningsränta
+-
+
+-
+
+0,14 SEK
+
+
+2024-05-31 
+7689420
+Utlåningsränta
+-
+
+-
+
+−1,04 SEK
+
+
+2024-05-20 
+7689420
+Utdelning värdepapperTesla Rösträttsberättigande Tilldelning rösträttsberättigande TSLA
+
+26
+
+-
+
+-
+
+
+2024-05-17 
+7689420
+Köp
+Storebrand USA A SEK
+
+35,0156
+
+571,17 SEK
+
+−19 999,96 SEK
+
+
+2024-05-17 
+7689420
+Överföring från kreditkontoÖverföring från Kreditdepån
+
+-
+
+-
+
+19 010,51 SEK
+
+
+2024-05-17 
+7689420
+Överföring till ISK/KF-depånÖverföring till ISK/KF-depån
+
+-
+
+-
+
+−19 010,51 SEK
+
+
+2024-05-16 
+7689420
+Sälj
+Embracer Group B
+
+−4 218
+
+30,67 SEK
+
+129 043,00 SEK
+
+
+2024-05-15 
+7689420
+Sälj
+Palantir Technologies
+
+−850
+
+21,50 USD
+
+193 858,52 SEK
