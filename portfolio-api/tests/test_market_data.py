@@ -28,3 +28,15 @@ def test_search_aapl_success(monkeypatch, client):
     data = resp.get_json()
     assert data["symbol"] == "AAPL"
     assert data["price"] == 123.45
+
+
+def test_get_company_name(monkeypatch):
+    def fake_call_api(self, path, query=None):
+        return {
+            "chart": {"result": [{"meta": {"longName": "Apple Inc"}}]}
+        }
+
+    monkeypatch.setattr(market_data.ApiClient, "call_api", fake_call_api)
+
+    name = market_data.get_company_name("AAPL")
+    assert name == "Apple Inc"

@@ -1,6 +1,9 @@
 import os
 import time
 import requests
+from typing import Optional
+
+from src.data_api import ApiClient
 
 class QuoteAPIError(Exception):
     """Raised when the external quote service fails"""
@@ -38,3 +41,25 @@ def fetch_quote(symbol: str):
 
     _CACHE[symbol] = (price, now)
     return price
+
+
+def get_company_name(symbol: str) -> Optional[str]:
+    """Return the company name for ``symbol`` using the data API.
+
+    Returns ``None`` if the lookup fails or the API response is invalid.
+    """
+    client = ApiClient()
+    try:
+        data = client.call_api(
+            "YahooFinance/get_stock_chart",
+            query={"symbol": symbol.upper(), "interval": "1d", "range": "1d"},
+        )
+    except Exception:
+        return None
+
+    try:
+        result = data["chart"]["result"][0]
+        meta = result.get("meta", {})
+        return meta.get("longName") or meta.get("shortName")
+    except Exception:
+        return None
