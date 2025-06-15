@@ -176,10 +176,7 @@ def test_portfolio_history(client, app):
 
 
 def test_search_missing(client, monkeypatch):
-    def no_price(*args, **kwargs):
-        return {}
-
-    monkeypatch.setattr('src.routes.portfolio.client.call_api', no_price)
+    monkeypatch.setattr('src.routes.portfolio.fetch_quote', lambda s: None)
 
     r = client.get('/api/portfolio/stocks/search/FOO')
     assert r.status_code == 404
@@ -237,3 +234,31 @@ def test_prices_refresh_updates_cache(client, monkeypatch, app):
         assert PriceCache.query.count() == 1
         rec = PriceCache.query.first()
         assert rec.currency.name == 'USD'
+
+
+def test_update_price_includes_company(client, monkeypatch):
+    tx = {
+        'symbol': 'AAPL',
+        'transaction_type': 'buy',
+        'quantity': 1,
+        'price_per_share': 100.0,
+        'transaction_date': '2024-01-01'
+    }
+    client.post('/api/portfolio/transactions', json=tx)
+
+    fake_chart = {
+        'chart': {
+            'result': [{
+                'meta': {
+                    'regularMarketPrice': 150.0,
+                    'longName': 'Apple Inc.'
+                }
+            }]
+        }
+    }
+    monkeypatch.setattr('src.routes.portfolio.client.call_api', lambda *a, **k: fake_chart)
+
+    resp = client.post('/api/portfolio/stocks/AAPL/price')
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['company'] == 'Apple Inc.'

@@ -1,5 +1,6 @@
 import json
 from src.services import market_data
+from src.lib import market_data as lib_market_data
 
 
 def test_search_aapl_success(monkeypatch, client):
@@ -22,9 +23,11 @@ def test_search_aapl_success(monkeypatch, client):
         return R()
 
     monkeypatch.setattr(market_data.requests, "get", fake_get)
+    monkeypatch.setattr(lib_market_data, "get_company_name", lambda s: "Apple Inc.")
 
     resp = client.get("/api/portfolio/stocks/search/AAPL")
     assert resp.status_code == 200
     data = resp.get_json()
     assert data["symbol"] == "AAPL"
     assert data["price"] == 123.45
+    assert data["company"] == "Apple Inc."
