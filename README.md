@@ -1,5 +1,7 @@
 # Portfolio Tracker
 
+[![codecov](https://codecov.io/gh/myorg/my-portfolio/branch/main/graph/badge.svg)](https://codecov.io/gh/myorg/my-portfolio)
+
 This repository contains a Flask backend (`portfolio-api`) and a React frontend (`portfolio-tracker`).
 
 ## Environment Variables
