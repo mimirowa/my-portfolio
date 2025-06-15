@@ -34,11 +34,16 @@ def test_transaction_custom_currency(client, app, monkeypatch):
     def fake_get(url, params=None, **kwargs):
         class R:
             def json(self_inner):
-                return {"rates": {params['symbols']: 1.0}}
+                return {
+                    "Time Series FX (Daily)": {
+                        "2024-03-01": {"4. close": "1.0"}
+                    }
+                }
 
         return R()
 
     monkeypatch.setattr('requests.get', fake_get)
+    monkeypatch.setenv('ALPHAVANTAGE_API_KEY', 'demo')
 
     data = {
         'symbol': 'PLN1',
@@ -55,7 +60,7 @@ def test_transaction_custom_currency(client, app, monkeypatch):
     with app.app_context():
         from src.models.portfolio import Transaction
         tx = Transaction.query.get(body['id'])
-        assert tx.currency.name == 'PLN'
+        assert tx.currency == 'PLN'
 
 
 def test_transaction_default_currency(client):
@@ -119,11 +124,16 @@ def test_currency_conversion(client, monkeypatch, app):
     def fake_fx_get(url, params=None, **kwargs):
         class R:
             def json(self_inner):
-                return {"rates": {params['symbols']: 1.2}}
+                return {
+                    "Time Series FX (Daily)": {
+                        "2024-01-02": {"4. close": "1.2"}
+                    }
+                }
 
         return R()
 
     monkeypatch.setattr('src.lib.fx.requests.get', fake_fx_get)
+    monkeypatch.setenv('ALPHAVANTAGE_API_KEY', 'demo')
 
     summary = client.get('/api/portfolio/summary')
     assert summary.status_code == 200
@@ -349,3 +359,70 @@ def test_fees_field_in_stock_list(client, monkeypatch):
     data = resp.get_json()
     assert round(data[0]['fees_paid'], 2) == 3.0
 
+
+def test_fx_fetch_success(client, monkeypatch, app):
+    monkeypatch.setenv('ALPHAVANTAGE_API_KEY', 'demo')
+    def fake_get(url, params=None, **kwargs):
+        class R:
+            def json(self_inner):
+                return {
+                    "Time Series FX (Daily)": {
+                        "2024-01-01": {"4. close": "10.0"}
+                    }
+                }
+        return R()
+    monkeypatch.setattr('requests.get', fake_get)
+    tx = {
+        'symbol': 'AAPL',
+        'transaction_type': 'buy',
+        'quantity': 1,
+        'price_per_share': 100.0,
+        'transaction_date': '2024-01-01',
+        'currency': 'SEK'
+    }
+    resp = client.post('/api/portfolio/transactions', json=tx)
+    assert resp.status_code == 201
+    data = resp.get_json()
+    with app.app_context():
+        from src.models.portfolio import Transaction
+        rec = Transaction.query.get(data['id'])
+        assert float(rec.fx_rate) == 10.0
+        assert rec.fx_error is None
+
+
+def test_fx_fetch_quota_exceeded(client, monkeypatch, app):
+    monkeypatch.setenv('ALPHAVANTAGE_API_KEY', 'demo')
+    def fake_get(url, params=None, **kwargs):
+        class R:
+            def json(self_inner):
+                return {"Note": "limit"}
+        return R()
+    monkeypatch.setattr('requests.get', fake_get)
+    tx = {
+        'symbol': 'AAPL',
+        'transaction_type': 'buy',
+        'quantity': 1,
+        'price_per_share': 100.0,
+        'transaction_date': '2024-01-01',
+        'currency': 'SEK'
+    }
+    resp = client.post('/api/portfolio/transactions', json=tx)
+    assert resp.status_code == 202
+    body = resp.get_json()
+    assert 'warning' in body
+    with app.app_context():
+        from src.models.portfolio import Transaction
+        rec = Transaction.query.get(body['id'])
+        assert rec.fx_rate is None
+        assert rec.fx_error == 'quota exceeded'
+
+
+def test_manual_fx_endpoint(client, app):
+    data = {'base': 'USD', 'quote': 'SEK', 'rate': 10.46}
+    resp = client.post('/api/fx/manual', json=data)
+    assert resp.status_code == 200
+    with app.app_context():
+        from src.models.portfolio import FxRate
+        from datetime import date
+        rec = FxRate.query.filter_by(base='USD', target='SEK', date=date.today()).first()
+        assert rec and rec.rate == 10.46

@@ -9,6 +9,7 @@ import { Loader2, Search, HelpCircle } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip.jsx'
 import { getCurrencySymbol } from '@/lib/utils.js'
 import { searchStock as fetchStock, addTransaction } from '@/lib/api'
+import { toast } from 'sonner'
 
 const BASE_CURRENCY = import.meta?.env?.VITE_BASE_CURRENCY || 'USD'
 
@@ -171,8 +172,11 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
       }
 
       const response = await addTransaction(payload)
-      
       if (response.ok) {
+        const data = await response.json()
+        if (response.status === 202 && data.warning) {
+          toast.warning(data.warning)
+        }
         onTransactionAdded()
         handleClose()
       } else {
@@ -276,21 +280,12 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
         {/* Currency */}
         <div className="space-y-2">
           <Label htmlFor="currency">Currency</Label>
-          <Select
+          <Input
+            id="currency"
             value={formData.currency}
-            onValueChange={(value) => handleInputChange('currency', value)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="USD">USD</SelectItem>
-              <SelectItem value="EUR">EUR</SelectItem>
-              <SelectItem value="SEK">SEK</SelectItem>
-              <SelectItem value="GBP">GBP</SelectItem>
-              <SelectItem value="JPY">JPY</SelectItem>
-            </SelectContent>
-          </Select>
+            onChange={(e) => handleInputChange('currency', e.target.value.toUpperCase())}
+            maxLength={3}
+          />
         </div>
 
         {/* Transaction Type */}
@@ -364,21 +359,12 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
               onChange={(e) => handleInputChange('fee_amount', e.target.value)}
               className="flex-1"
             />
-            <Select
+            <Input
               value={formData.fee_currency}
-              onValueChange={(v) => handleInputChange('fee_currency', v)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="USD">USD</SelectItem>
-                <SelectItem value="EUR">EUR</SelectItem>
-                <SelectItem value="SEK">SEK</SelectItem>
-                <SelectItem value="GBP">GBP</SelectItem>
-                <SelectItem value="JPY">JPY</SelectItem>
-              </SelectContent>
-            </Select>
+              onChange={(e) => handleInputChange('fee_currency', e.target.value.toUpperCase())}
+              maxLength={3}
+              className="w-20"
+            />
           </div>
         </div>
 
