@@ -6,7 +6,7 @@ REQUIRED_COLS = ["Datum", "Typ", "Namn", "Antal/Belopp", "Kurs", "Belopp", "Valu
 
 
 def parse_xlsx(file_obj):
-    df = pd.read_excel(file_obj, engine=None)
+    df = pd.read_excel(file_obj, engine="openpyxl")
     cols = list(df.columns)
     if not all(c in cols for c in REQUIRED_COLS):
         raise ValueError("Missing required columns")
