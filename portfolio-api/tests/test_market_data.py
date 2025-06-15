@@ -32,7 +32,6 @@ def test_search_aapl_success(monkeypatch, client):
     assert data["price"] == 123.45
     assert data["company"] == "Apple Inc."
 
-
 def test_get_company_name(monkeypatch):
     def fake_call_api(self, path, query=None):
         return {
