@@ -88,6 +88,11 @@ def get_all_stocks():
                 total_cost_orig = sum(
                     trade_cost(t) for t in buy_transactions if t.currency.value == tx_currency
                 )
+
+                fees_total = sum(
+                    tx_fee_to_ccy(t, base_currency)
+                    for t in buy_transactions + sell_transactions
+                )
                 
                 # Calculate current value and gains
                 current_value = current_quantity * (stock.current_price or 0)
@@ -105,7 +110,8 @@ def get_all_stocks():
                     'current_value': round(current_value * rate, 2),
                     'cost_basis': round(cost_basis * rate, 2),
                     'total_gain': round(total_gain * rate, 2),
-                    'total_gain_percent': round(total_gain_percent, 2)
+                    'total_gain_percent': round(total_gain_percent, 2),
+                    'fees_paid': round(fees_total * rate, 2)
                 })
                 portfolio_data.append(stock_data)
         

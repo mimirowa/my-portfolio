@@ -1,11 +1,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react'
+import { Switch } from '@/components/ui/switch.jsx'
+import { useSettings } from '@/store/settingsSlice'
 
 function PortfolioSummary({ summary }) {
+  const { includeFees, setIncludeFees } = useSettings()
   if (!summary) return null
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Value</CardTitle>
@@ -78,6 +81,28 @@ function PortfolioSummary({ summary }) {
         <CardContent>
           <div className={`text-2xl font-bold ${summary.net_gain_after_fees >= 0 ? 'text-green-600' : 'text-red-600'}`}>${summary.net_gain_after_fees.toLocaleString()}</div>
           <p className="text-xs text-muted-foreground">Fees Paid: ${summary.total_fees_paid.toLocaleString()}</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Fees Paid</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">${summary.total_fees_paid.toLocaleString()}</div>
+          <p className="text-xs text-muted-foreground">Brokerage and trading fees</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Include fees in performance</CardTitle>
+          <Switch checked={includeFees} onCheckedChange={setIncludeFees} id="fees-toggle" />
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs text-muted-foreground">
+            Toggle to subtract fees when calculating gains
+          </p>
         </CardContent>
       </Card>
     </div>
