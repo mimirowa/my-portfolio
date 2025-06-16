@@ -23,6 +23,7 @@ from src.data_api import ApiClient
 from src.services.market_data import fetch_quote, QuoteAPIError
 
 portfolio_bp = Blueprint('portfolio', __name__)
+prices_bp = Blueprint('prices', __name__)
 client = ApiClient()
 
 # Return JSON for not found errors within this blueprint
@@ -184,9 +185,73 @@ def update_stock_price(symbol):
                 
         except Exception as api_error:
             return jsonify({'error': f'API error: {str(api_error)}'}), 500
-            
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@prices_bp.route('/update', methods=['POST'])
+def update_price():
+    """Update a single stock price using the quote service.
+
+    If the price was already fetched today, the cached value is returned
+    without contacting the external API.
+    """
+    symbol = request.args.get('symbol', '').upper()
+    if not symbol:
+        return jsonify({'error': 'missing symbol'}), 400
+
+    today = date.today()
+    cache = (
+        PriceCache.query.filter_by(symbol=symbol)
+        .order_by(PriceCache.fetched_at.desc())
+        .first()
+    )
+    if cache and cache.fetched_at.date() == today:
+        stock = Stock.query.filter_by(symbol=symbol).first()
+        if stock:
+            stock.current_price = cache.price
+            stock.last_updated = cache.fetched_at
+            db.session.commit()
+        return jsonify({
+            'symbol': symbol,
+            'current_price': cache.price,
+            'company': stock.company_name if stock else None,
+            'last_updated': cache.fetched_at.isoformat(),
+        })
+
+    try:
+        price = fetch_quote(symbol)
+    except QuoteAPIError as exc:
+        return jsonify({'error': str(exc)}), 502
+
+    if price is None:
+        return jsonify({'error': 'Price data not available'}), 400
+
+    stock = Stock.query.filter_by(symbol=symbol).first()
+    if not stock:
+        from src.lib.market_data import get_company_name
+        stock = Stock(symbol=symbol, company_name=get_company_name(symbol))
+        db.session.add(stock)
+        db.session.flush()
+    elif not stock.company_name:
+        from src.lib.market_data import get_company_name
+        stock.company_name = get_company_name(symbol)
+
+    stock.current_price = price
+    stock.last_updated = datetime.utcnow()
+    base_currency = os.environ.get('BASE_CURRENCY', BASE_CURRENCY)
+    db.session.add(
+        PriceCache(symbol=symbol, price=price, currency=CurrencyEnum[base_currency])
+    )
+    db.session.commit()
+
+    return jsonify({
+        'symbol': stock.symbol,
+        'current_price': price,
+        'company': stock.company_name,
+        'last_updated': stock.last_updated.isoformat(),
+    })
 
 
 @portfolio_bp.route('/prices/refresh', methods=['POST'])
