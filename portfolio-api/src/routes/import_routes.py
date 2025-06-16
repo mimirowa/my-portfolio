@@ -5,6 +5,7 @@ from src.lib.fx import validate_currency_code
 from src.models.user import db
 from src.services.google_finance import parse_raw
 from src.services.xlsx_import import parse_xlsx
+from werkzeug.exceptions import BadRequest
 from src.importers.avanza_text import detect_avanza_text, parse_avanza_text
 
 import_bp = Blueprint('import', __name__)
@@ -77,5 +78,8 @@ def xlsx_preview():
     file = request.files.get('file')
     if not file:
         return jsonify({'error': 'No file uploaded'}), 400
-    rows, invalid = parse_xlsx(file)
+    try:
+        rows, invalid = parse_xlsx(file)
+    except ValueError as exc:
+        raise BadRequest(str(exc)) from exc
     return jsonify({"rows": rows, "invalid_rows": invalid})
