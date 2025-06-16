@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from src.services.xlsx_import import parse_xlsx
+from src.services.xlsx_import import parse_xlsx, _localize_headers
 
 
 def test_missing_headers(tmp_path, app):
@@ -12,3 +12,25 @@ def test_missing_headers(tmp_path, app):
     with app.app_context():
         with pytest.raises(ValueError, match="Missing required columns"):
             parse_xlsx(bad_file)
+
+
+def test_avanza_headers():
+    df = pd.DataFrame(columns=[
+        "Datum",
+        "Konto",
+        "Trnsaktionstyp",
+        "V\u00e4rdepapper/Beskrivning",
+        "Antal",
+        "Kurs",
+        "Belopp",
+    ])
+    localized = _localize_headers(df)
+    assert localized.columns.tolist() == [
+        "Date",
+        "Konto",
+        "Action",
+        "Symbol",
+        "Quantity",
+        "PriceRaw",
+        "TotalAmount",
+    ]
