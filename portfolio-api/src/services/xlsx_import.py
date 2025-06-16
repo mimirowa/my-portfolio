@@ -1,15 +1,39 @@
 import pandas as pd
+from flask import current_app as app
 from .google_finance import _parse_number
 from datetime import datetime
 
-REQUIRED_COLS = ["Datum", "Typ", "Namn", "Antal/Belopp", "Kurs", "Belopp", "Valuta"]
+REQUIRED_COLUMNS = {"Date", "Symbol", "Action", "Quantity", "Price", "Currency"}
+
+ALIAS_MAP = {
+    "Ticker": "Symbol",
+    "Qty": "Quantity",
+    "Amount": "Price",
+}
 
 
 def parse_xlsx(file_obj):
-    df = pd.read_excel(file_obj, engine="openpyxl")
-    cols = list(df.columns)
-    if not all(c in cols for c in REQUIRED_COLS):
-        raise ValueError("Missing required columns")
+    df = pd.read_excel(file_obj)
+    df.rename(columns=ALIAS_MAP, inplace=True)
+
+    swedish = {
+        "Datum": "Date",
+        "Typ": "Action",
+        "Namn": "Symbol",
+        "Antal/Belopp": "Quantity",
+        "Kurs": "Price",
+        "Valuta": "Currency",
+    }
+    df.rename(columns=swedish, inplace=True)
+
+    missing = REQUIRED_COLUMNS - set(df.columns)
+    if missing:
+        current = ", ".join(df.columns)
+        app.logger.warning("XLSX import failed; missing=%s", sorted(missing))
+        raise ValueError(
+            f"Missing required columns: {sorted(missing)}; got: {current}"
+        )
+    df.rename(columns={v: k for k, v in swedish.items()}, inplace=True)
 
     rows = []
     invalid = []
