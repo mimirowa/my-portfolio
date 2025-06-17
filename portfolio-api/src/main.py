@@ -8,7 +8,7 @@ from flask_cors import CORS
 from src.models.user import db
 from src.models.portfolio import Stock, Transaction
 from src.routes.user import user_bp
-from src.routes.portfolio import portfolio_bp
+from src.routes.portfolio import portfolio_bp, prices_bp
 from src.routes.import_routes import import_bp
 from src.routes.fx import fx_bp
 from src.config import SQLALCHEMY_DATABASE_URI
@@ -24,6 +24,7 @@ app.config['BASE_CURRENCY'] = PORTFOLIO_BASE_CCY
 
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(portfolio_bp, url_prefix='/api/portfolio')
+app.register_blueprint(prices_bp, url_prefix='/api/prices')
 app.register_blueprint(import_bp, url_prefix='/api/import')
 app.register_blueprint(fx_bp, url_prefix='/api/fx')
 

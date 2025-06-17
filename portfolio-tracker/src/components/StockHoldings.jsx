@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge.jsx'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table.jsx'
 import { TrendingUp, TrendingDown, RefreshCw, ExternalLink } from 'lucide-react'
 import { getCurrencySymbol } from '@/lib/utils.js'
-import { post, fetchCurrentPrice } from '@/lib/api'
+import { fetchCurrentPrice, updatePrice } from '@/lib/api'
+import { toast } from 'sonner'
 import { calcPortfolioMetrics } from '@/lib/calcPortfolioMetrics'
 import { useSettings } from '@/store/settingsSlice'
 
@@ -54,13 +55,23 @@ function StockHoldings({ portfolioData, onRefresh, loading }) {
   const updateSingleStockPrice = async (symbol) => {
     try {
       setUpdatingStock(symbol)
-      const response = await post(`/stocks/${symbol}/price`, {})
-      
+      const response = await updatePrice(symbol)
       if (response.ok) {
-        onRefresh()
+        const data = await response.json()
+        setPrices((prev) => ({
+          ...prev,
+          [symbol]: {
+            price: data.current_price,
+            last_updated: data.last_updated,
+          },
+        }))
+        toast.success(`Updated ${symbol}`)
+      } else {
+        toast.error('Failed to update price')
       }
     } catch (error) {
       console.error('Error updating stock price:', error)
+      toast.error('Failed to update price')
     } finally {
       setUpdatingStock(null)
     }

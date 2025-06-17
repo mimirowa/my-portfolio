@@ -10,7 +10,7 @@ import pytest
 from flask import Flask
 from src.models.user import db
 from src.routes.user import user_bp
-from src.routes.portfolio import portfolio_bp
+from src.routes.portfolio import portfolio_bp, prices_bp
 from src.routes.import_routes import import_bp
 from src.routes.fx import fx_bp
 
@@ -26,6 +26,7 @@ def app():
         db.create_all()
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(portfolio_bp, url_prefix='/api/portfolio')
+    app.register_blueprint(prices_bp, url_prefix='/api/prices')
     app.register_blueprint(import_bp, url_prefix='/api/import')
     app.register_blueprint(fx_bp, url_prefix='/api/fx')
     yield app

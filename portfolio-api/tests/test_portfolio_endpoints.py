@@ -256,19 +256,10 @@ def test_update_price_includes_company(client, monkeypatch):
     }
     client.post('/api/portfolio/transactions', json=tx)
 
-    fake_chart = {
-        'chart': {
-            'result': [{
-                'meta': {
-                    'regularMarketPrice': 150.0,
-                    'longName': 'Apple Inc.'
-                }
-            }]
-        }
-    }
-    monkeypatch.setattr('src.routes.portfolio.client.call_api', lambda *a, **k: fake_chart)
+    monkeypatch.setattr('src.routes.portfolio.fetch_quote', lambda s: 150.0)
+    monkeypatch.setattr('src.lib.market_data.get_company_name', lambda s: 'Apple Inc.')
 
-    resp = client.post('/api/portfolio/stocks/AAPL/price')
+    resp = client.post('/api/prices/update?symbol=AAPL')
     assert resp.status_code == 200
     body = resp.get_json()
     assert body['company'] == 'Apple Inc.'
