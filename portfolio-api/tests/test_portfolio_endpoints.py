@@ -295,6 +295,26 @@ def test_buy_fee_affects_avg_cost(client, monkeypatch):
     assert round(items[0]['avg_cost_basis'], 2) == 10.05
 
 
+def test_single_tx_no_fx_uses_input_price(client, monkeypatch):
+    monkeypatch.setattr('src.routes.portfolio.get_fx_rate', lambda *a, **k: 1.0)
+
+    tx = {
+        'symbol': 'TSLA',
+        'transaction_type': 'buy',
+        'quantity': 2,
+        'price_per_share': 123.45,
+        'transaction_date': '2024-01-01',
+        'currency': 'USD',
+    }
+    client.post('/api/portfolio/transactions', json=tx)
+
+    resp = client.get('/api/portfolio/stocks')
+    assert resp.status_code == 200
+    items = resp.get_json()
+    assert len(items) == 1
+    assert round(items[0]['avg_cost_basis'], 2) == 123.45
+
+
 def test_sell_fee_impacts_pl(client, monkeypatch):
     monkeypatch.setattr('src.routes.portfolio.get_fx_rate', lambda *a, **k: 1.0)
 

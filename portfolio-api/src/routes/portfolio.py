@@ -90,15 +90,27 @@ def get_all_stocks():
                     fee_ccy = tx_fee_to_ccy(tx, tx.currency)
                     return tx.quantity * tx.price_per_share + fee_ccy
 
-                total_cost = sum(
-                    trade_cost(t)
-                    * safe_rate(t.currency, base_currency, t.transaction_date)
-                    for t in buy_transactions
-                )
-                avg_cost_basis = total_cost / total_bought if total_bought > 0 else 0
-                total_cost_orig = sum(
-                    trade_cost(t) for t in buy_transactions if t.currency == tx_currency
-                )
+                if len(buy_transactions) == 1 and len(sell_transactions) == 0:
+                    tx = buy_transactions[0]
+                    conv = 1.0
+                    if base_currency != tx.currency:
+                        conv = safe_rate(tx.currency, base_currency, tx.transaction_date)
+                    avg_cost_basis = (
+                        tx.price_per_share * conv
+                        + tx_fee_to_ccy(tx, base_currency) / tx.quantity
+                    )
+                    total_cost = tx.quantity * avg_cost_basis
+                    total_cost_orig = trade_cost(tx)
+                else:
+                    total_cost = sum(
+                        trade_cost(t)
+                        * safe_rate(t.currency, base_currency, t.transaction_date)
+                        for t in buy_transactions
+                    )
+                    avg_cost_basis = total_cost / total_bought if total_bought > 0 else 0
+                    total_cost_orig = sum(
+                        trade_cost(t) for t in buy_transactions if t.currency == tx_currency
+                    )
 
                 fees_total = sum(
                     tx_fee_to_ccy(t, base_currency)
