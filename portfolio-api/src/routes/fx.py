@@ -1,6 +1,6 @@
 from datetime import date
 from flask import Blueprint, request, jsonify
-from src.models.portfolio import FxRate
+from src.models.portfolio import ExchangeRate
 from src.models.user import db
 from src.lib.fx import validate_currency_code
 
@@ -13,10 +13,10 @@ def manual_rate():
     quote = validate_currency_code(data.get('quote', ''))
     rate = float(data['rate'])
     today = date.today()
-    rec = FxRate.query.filter_by(base=base, target=quote, date=today).first()
+    rec = ExchangeRate.query.filter_by(base=base, quote=quote, date=today).first()
     if rec:
         rec.rate = rate
     else:
-        db.session.add(FxRate(base=base, target=quote, date=today, rate=rate))
+        db.session.add(ExchangeRate(base=base, quote=quote, date=today, rate=rate))
     db.session.commit()
     return jsonify({'base': base, 'quote': quote, 'rate': rate})
