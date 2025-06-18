@@ -1,12 +1,14 @@
 import { Button } from '@/components/ui/button.jsx'
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select.jsx'
 import { RefreshCw } from 'lucide-react'
+import { Switch } from '@/components/ui/switch.jsx'
+import { Label } from '@/components/ui/label.jsx'
 import { useSettings } from '@/store/settingsSlice'
 
 const CURRENCIES = ['USD','EUR','GBP','SEK','PLN','JPY']
 
 export default function Header({ onUpdatePrices, loading }) {
-  const { baseCurrency, setBaseCurrency } = useSettings()
+  const { baseCurrency, setBaseCurrency, includeFees, setIncludeFees } = useSettings()
   return (
     <div className="flex justify-between items-center mb-8">
       <div>
@@ -33,6 +35,8 @@ export default function Header({ onUpdatePrices, loading }) {
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           Update Prices
         </Button>
+        <Label htmlFor="fees-toggle">Show fees:</Label>
+        <Switch id="fees-toggle" checked={includeFees} onCheckedChange={setIncludeFees} />
       </div>
     </div>
   )
