@@ -6,6 +6,7 @@ from src.models.portfolio import (
     Transaction,
     CurrencyEnum,
     PriceCache,
+    ExchangeRate,
     BASE_CURRENCY,
 )
 from src.config import PORTFOLIO_BASE_CCY
@@ -27,6 +28,30 @@ from src.services.market_data import fetch_quote, QuoteAPIError
 portfolio_bp = Blueprint('portfolio', __name__)
 prices_bp = Blueprint('prices', __name__)
 client = ApiClient()
+
+
+def ensure_fx_rates(start_date: date, currency: str) -> None:
+    """Ensure FX rates from ``currency`` to the base currency exist from
+    ``start_date`` through today."""
+    base_currency = os.environ.get("PORTFOLIO_BASE_CCY", PORTFOLIO_BASE_CCY)
+    if currency.upper() == base_currency:
+        return
+
+    if isinstance(start_date, str):
+        start_date = date.fromisoformat(start_date)
+
+    d = start_date
+    today = date.today()
+    while d <= today:
+        exists = (
+            ExchangeRate.query.filter_by(base=currency.upper(), quote=base_currency, date=d).first()
+        )
+        if not exists:
+            try:
+                get_fx_rate(currency, base_currency, d)
+            except (UnsupportedCurrency, FxDownloadError):
+                break
+        d += timedelta(days=1)
 
 # Return JSON for not found errors within this blueprint
 @portfolio_bp.errorhandler(404)
@@ -84,9 +109,14 @@ def get_all_stocks():
                             fee = to_base(fee, src, tx.transaction_date)
                         else:
                             base_fee = to_base(fee, src, tx.transaction_date)
-                            rate = services_fx.get_rate(ccy, base_currency, tx.transaction_date)
-                            if rate is None:
-                                raise BadGateway("FX rate unavailable")
+                            try:
+                                rate = services_fx.get_rate(
+                                    tx.transaction_date,
+                                    ccy,
+                                    base_currency,
+                                )
+                            except FxDownloadError as exc:
+                                raise BadGateway("FX rate unavailable") from exc
                             fee = base_fee / rate
                     return fee
 
@@ -413,6 +443,8 @@ def add_transaction():
         db.session.add(transaction)
         db.session.commit()
 
+        ensure_fx_rates(transaction_date, currency)
+
         body = transaction.to_dict()
         status = 201
         if fx_rate is None:
@@ -561,9 +593,14 @@ def get_portfolio_summary():
                     fee = to_base(fee, src, tx.transaction_date)
                 else:
                     base_fee = to_base(fee, src, tx.transaction_date)
-                    rate = services_fx.get_rate(ccy, base_currency, tx.transaction_date)
-                    if rate is None:
-                        raise BadGateway("FX rate unavailable")
+                    try:
+                        rate = services_fx.get_rate(
+                            tx.transaction_date,
+                            ccy,
+                            base_currency,
+                        )
+                    except FxDownloadError as exc:
+                        raise BadGateway("FX rate unavailable") from exc
                     fee = base_fee / rate
             return fee
 
@@ -709,9 +746,14 @@ def get_portfolio_history():
                     fee = to_base(fee, src, tx.transaction_date)
                 else:
                     base_fee = to_base(fee, src, tx.transaction_date)
-                    rate = services_fx.get_rate(ccy, base_currency, tx.transaction_date)
-                    if rate is None:
-                        raise BadGateway("FX rate unavailable")
+                    try:
+                        rate = services_fx.get_rate(
+                            tx.transaction_date,
+                            ccy,
+                            base_currency,
+                        )
+                    except FxDownloadError as exc:
+                        raise BadGateway("FX rate unavailable") from exc
                     fee = base_fee / rate
             return fee
 

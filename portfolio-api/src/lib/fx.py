@@ -96,8 +96,9 @@ def to_base(value: float, ccy: str, dt: Union[str, date_cls]) -> float:
 
     from src.services import fx as svc
 
-    rate = svc.get_rate(ccy, base_ccy, dt)
-    if rate is None:
-        raise BadGateway("FX rate unavailable")
+    try:
+        rate = svc.get_rate(dt, ccy, base_ccy)
+    except FxDownloadError as exc:
+        raise BadGateway("FX rate unavailable") from exc
 
     return float(value) * rate
