@@ -3,12 +3,12 @@ from datetime import date
 import pytest
 
 from src.services import fx
-from src.models.portfolio import FxRate
+from src.models.portfolio import ExchangeRate
 
 
 def test_get_rate_cached(monkeypatch, app):
     with app.app_context():
-        rec = FxRate(base="USD", target="SEK", date=date(2024, 1, 1), rate=10.0)
+        rec = ExchangeRate(base="USD", quote="SEK", date=date(2024, 1, 1), rate=10.0)
         from src.models.user import db
         db.session.add(rec)
         db.session.commit()
@@ -33,7 +33,7 @@ def test_get_rate_fetch(monkeypatch, app):
     with app.app_context():
         rate = fx.get_rate(date(2024, 1, 1), "USD", "SEK")
         from src.models.user import db
-        rows = FxRate.query.filter_by(base="USD", date=date(2024, 1, 1)).all()
+        rows = ExchangeRate.query.filter_by(base="USD", date=date(2024, 1, 1)).all()
         assert len(rows) >= 2
         assert rate == 10.5
         db.session.rollback()

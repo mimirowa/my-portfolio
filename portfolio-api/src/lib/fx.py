@@ -4,6 +4,9 @@ import os
 
 import requests
 from flask import current_app
+from werkzeug.exceptions import BadGateway
+
+from src.config import PORTFOLIO_BASE_CCY
 
 from src.models.portfolio import ExchangeRate
 from src.models.user import db
@@ -75,3 +78,27 @@ def get_fx_rate(from_ccy: str, to_ccy: str, dt: Union[str, date_cls]) -> float:
     db.session.commit()
 
     return fx
+
+
+def to_base(value: float, ccy: str, dt: Union[str, date_cls]) -> float:
+    """Convert ``value`` from ``ccy`` to the portfolio base currency.
+
+    Raises :class:`BadGateway` when the rate is unavailable.
+    """
+    if isinstance(dt, str):
+        dt = date_cls.fromisoformat(dt)
+
+    ccy = _norm(ccy)
+    base_ccy = _norm(current_app.config.get("PORTFOLIO_BASE_CCY", PORTFOLIO_BASE_CCY))
+
+    if ccy == base_ccy:
+        return float(value)
+
+    from src.services import fx as svc
+
+    try:
+        rate = svc.get_rate(dt, ccy, base_ccy)
+    except FxDownloadError as exc:
+        raise BadGateway("FX rate unavailable") from exc
+
+    return float(value) * rate
