@@ -37,6 +37,13 @@ the version like `v4e96b97` corresponding to the commit used for the build.
 
 The API reads optional environment variables like `SECRET_KEY`, `DATABASE_URL` and `PORTFOLIO_BASE_CCY`. Default values are provided so it will start without extra configuration. Historical price lookups use the minimal `ApiClient` in `portfolio-api/src/data_api.py`. To enable live quote lookups via Alpha Vantage set `ALPHAVANTAGE_API_KEY`.
 
+### Data Providers
+
+Historical prices and company lookups come from Manus API Hub (Yahoo Finance).
+When `ALPHAVANTAGE_API_KEY` is set the API will query Alpha Vantage for live
+quotes. If a symbol is not available there, it falls back to [Stooq](https://stooq.com).
+Set `FALLBACK_PROVIDER=stooq` in your `.env` to enable this behaviour.
+
 # My Portfolio
 
 This repository contains a Flask API and a React front-end for tracking investment portfolios.

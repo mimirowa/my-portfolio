@@ -213,7 +213,10 @@ def test_search_missing(client, monkeypatch):
     assert r.get_json()["message"] == "symbol not found"
 
 
-def test_search_not_found(client):
+def test_search_not_found(client, monkeypatch):
+    from src.services.providers import stooq
+    monkeypatch.setattr(stooq, 'fetch_quote', lambda s: None)
+
     r = client.get('/api/portfolio/stocks/search/FOO')
     assert r.status_code == 404
 
