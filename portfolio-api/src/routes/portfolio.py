@@ -6,6 +6,7 @@ from src.models.portfolio import (
     Transaction,
     CurrencyEnum,
     PriceCache,
+    FxRate,
     BASE_CURRENCY,
 )
 from src.config import PORTFOLIO_BASE_CCY
@@ -25,6 +26,30 @@ from src.services.market_data import fetch_quote, QuoteAPIError
 portfolio_bp = Blueprint('portfolio', __name__)
 prices_bp = Blueprint('prices', __name__)
 client = ApiClient()
+
+
+def ensure_fx_rates(start_date: date, currency: str) -> None:
+    """Ensure FX rates from ``currency`` to the base currency exist from
+    ``start_date`` through today."""
+    base_currency = os.environ.get("PORTFOLIO_BASE_CCY", PORTFOLIO_BASE_CCY)
+    if currency.upper() == base_currency:
+        return
+
+    if isinstance(start_date, str):
+        start_date = date.fromisoformat(start_date)
+
+    d = start_date
+    today = date.today()
+    while d <= today:
+        exists = (
+            FxRate.query.filter_by(base=currency.upper(), target=base_currency, date=d).first()
+        )
+        if not exists:
+            try:
+                get_fx_rate(currency, base_currency, d)
+            except (UnsupportedCurrency, FxDownloadError):
+                break
+        d += timedelta(days=1)
 
 # Return JSON for not found errors within this blueprint
 @portfolio_bp.errorhandler(404)
@@ -410,6 +435,8 @@ def add_transaction():
         
         db.session.add(transaction)
         db.session.commit()
+
+        ensure_fx_rates(transaction_date, currency)
 
         body = transaction.to_dict()
         status = 201
