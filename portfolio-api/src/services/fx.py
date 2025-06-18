@@ -69,6 +69,7 @@ def get_rate(date: date_cls | str, base_ccy: str, quote_ccy: str) -> float:
             return rate
     except FxDownloadError:
         pass
+
     rates = _fetch_rates(dt, base)
     for tgt, rate in rates.items():
         if tgt not in SUPPORTED_CCY:
