@@ -105,6 +105,7 @@ class ExchangeRate(db.Model):
     quote = db.Column(db.String(3), nullable=False)
     date = db.Column(db.Date, nullable=False)
     rate = db.Column(db.Float, nullable=False)
+    source = db.Column(db.String(32), nullable=True)
 
     __table_args__ = (
         db.UniqueConstraint("base", "quote", "date", name="uix_exchange_rate"),

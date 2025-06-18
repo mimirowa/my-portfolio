@@ -472,11 +472,12 @@ def test_fx_fetch_quota_exceeded(client, monkeypatch, app):
 
 
 def test_manual_fx_endpoint(client, app):
-    data = {'base': 'USD', 'quote': 'SEK', 'rate': 10.46}
-    resp = client.post('/api/fx/manual', json=data)
+    from datetime import date as date_cls
+    today = date_cls.today().isoformat()
+    data = {'date': today, 'base': 'USD', 'quote': 'SEK', 'rate': 10.46}
+    resp = client.post('/api/fx/override', json=data)
     assert resp.status_code == 200
     with app.app_context():
         from src.models.portfolio import ExchangeRate
-        from datetime import date
-        rec = ExchangeRate.query.filter_by(base='USD', quote='SEK', date=date.today()).first()
-        assert rec and rec.rate == 10.46
+        rec = ExchangeRate.query.filter_by(base='USD', quote='SEK', date=date_cls.fromisoformat(today)).first()
+        assert rec and rec.rate == 10.46 and rec.source == 'manual'
