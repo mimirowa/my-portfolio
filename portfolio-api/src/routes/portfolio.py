@@ -219,6 +219,7 @@ def update_stock_price(symbol):
         return jsonify({'error': str(e)}), 500
 
 
+@portfolio_bp.route('/prices/update', methods=['POST'])
 @prices_bp.route('/update', methods=['POST'])
 def update_price():
     """Update a single stock price using the quote service.

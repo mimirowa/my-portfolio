@@ -129,6 +129,7 @@ The app will be available at the printed Vite dev server address (usually `http:
 | `GET /api/portfolio/stocks` | Get all portfolio stocks |
 | `GET /api/portfolio/stocks/<symbol>` | Get stock details |
 | `POST /api/portfolio/stocks/<symbol>/price` | Refresh a stock price |
+| `POST /api/portfolio/prices/update?symbol=<symbol>` | Update cached price |
 | `GET /api/portfolio/transactions` | List all transactions |
 | `POST /api/portfolio/transactions` | Add a transaction |
 | `DELETE /api/portfolio/transactions/<id>` | Delete a transaction |

@@ -265,6 +265,26 @@ def test_update_price_includes_company(client, monkeypatch):
     assert body['company'] == 'Apple Inc.'
 
 
+def test_update_price_alias(client, monkeypatch):
+    tx = {
+        'symbol': 'GOOG',
+        'transaction_type': 'buy',
+        'quantity': 1,
+        'price_per_share': 200.0,
+        'transaction_date': '2024-01-01'
+    }
+    client.post('/api/portfolio/transactions', json=tx)
+
+    monkeypatch.setattr('src.routes.portfolio.fetch_quote', lambda s: 250.0)
+    monkeypatch.setattr('src.lib.market_data.get_company_name', lambda s: 'Google LLC')
+
+    resp = client.post('/api/portfolio/prices/update?symbol=GOOG')
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['current_price'] == 250.0
+    assert data['company'] == 'Google LLC'
+
+
 def test_buy_fee_affects_avg_cost(client, monkeypatch):
     monkeypatch.setattr('src.routes.portfolio.get_fx_rate', lambda *a, **k: 1.0)
 
