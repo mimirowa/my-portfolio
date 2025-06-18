@@ -145,12 +145,29 @@ def get_all_stocks():
 
 @portfolio_bp.route('/stocks/<symbol>', methods=['GET'])
 def get_stock(symbol):
-    """Get a specific stock by symbol"""
+    """Get a specific stock by symbol."""
     try:
+        env_base = os.environ.get('BASE_CURRENCY', BASE_CURRENCY)
+        requested_base = request.args.get('base', env_base).upper()
+        rate = 1.0
+        if requested_base != env_base:
+            try:
+                resp = requests.get(
+                    "https://api.exchangerate.host/latest",
+                    params={"base": env_base, "symbols": requested_base},
+                    timeout=10,
+                )
+                rate = resp.json()["rates"][requested_base]
+            except Exception:
+                rate = 1.0
+
         stock = Stock.query.filter_by(symbol=symbol.upper()).first()
         if not stock:
             return jsonify({'error': 'Stock not found'}), 404
-        return jsonify(stock.to_dict())
+        data = stock.to_dict()
+        if data.get('current_price') is not None:
+            data['current_price'] = round(data['current_price'] * rate, 2)
+        return jsonify(data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -213,6 +230,20 @@ def update_price():
     if not symbol:
         return jsonify({'error': 'missing symbol'}), 400
 
+    env_base = os.environ.get('BASE_CURRENCY', BASE_CURRENCY)
+    requested_base = request.args.get('base', env_base).upper()
+    rate = 1.0
+    if requested_base != env_base:
+        try:
+            resp = requests.get(
+                "https://api.exchangerate.host/latest",
+                params={"base": env_base, "symbols": requested_base},
+                timeout=10,
+            )
+            rate = resp.json()["rates"][requested_base]
+        except Exception:
+            rate = 1.0
+
     today = date.today()
     cache = (
         PriceCache.query.filter_by(symbol=symbol)
@@ -227,7 +258,7 @@ def update_price():
             db.session.commit()
         return jsonify({
             'symbol': symbol,
-            'current_price': cache.price,
+            'current_price': round(cache.price * rate, 2),
             'company': stock.company_name if stock else None,
             'last_updated': cache.fetched_at.isoformat(),
         })
@@ -260,7 +291,7 @@ def update_price():
 
     return jsonify({
         'symbol': stock.symbol,
-        'current_price': price,
+        'current_price': round(price * rate, 2),
         'company': stock.company_name,
         'last_updated': stock.last_updated.isoformat(),
     })
