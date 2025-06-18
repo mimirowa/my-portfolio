@@ -94,17 +94,6 @@ function PortfolioSummary({ summary }) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Include fees in performance</CardTitle>
-          <Switch checked={includeFees} onCheckedChange={setIncludeFees} id="fees-toggle" />
-        </CardHeader>
-        <CardContent>
-          <p className="text-xs text-muted-foreground">
-            Toggle to subtract fees when calculating gains
-          </p>
-        </CardContent>
-      </Card>
     </div>
   )
 }
