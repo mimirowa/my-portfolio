@@ -97,17 +97,19 @@ class PriceCache(db.Model):
         return f"<PriceCache {self.symbol} {self.price} {self.currency.value}>"
 
 
-class FxRate(db.Model):
-    __tablename__ = "fx_rates"
+class ExchangeRate(db.Model):
+    __tablename__ = "exchange_rates"
 
     id = db.Column(db.Integer, primary_key=True)
     base = db.Column(db.String(3), nullable=False)
-    target = db.Column(db.String(3), nullable=False)
+    quote = db.Column(db.String(3), nullable=False)
     date = db.Column(db.Date, nullable=False)
     rate = db.Column(db.Float, nullable=False)
 
-    __table_args__ = (db.UniqueConstraint("base", "target", "date", name="uix_fx"),)
+    __table_args__ = (
+        db.UniqueConstraint("base", "quote", "date", name="uix_exchange_rate"),
+    )
 
     def __repr__(self):
-        return f"<FxRate {self.base}->{self.target} {self.date} {self.rate}>"
+        return f"<ExchangeRate {self.base}->{self.quote} {self.date} {self.rate}>"
 

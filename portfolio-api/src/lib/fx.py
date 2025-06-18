@@ -5,7 +5,7 @@ import os
 import requests
 from flask import current_app
 
-from src.models.portfolio import FxRate
+from src.models.portfolio import ExchangeRate
 from src.models.user import db
 
 
@@ -41,7 +41,7 @@ def get_fx_rate(from_ccy: str, to_ccy: str, dt: Union[str, date_cls]) -> float:
     if from_ccy == to_ccy:
         return 1.0
 
-    rate = FxRate.query.filter_by(base=from_ccy, target=to_ccy, date=dt).first()
+    rate = ExchangeRate.query.filter_by(base=from_ccy, quote=to_ccy, date=dt).first()
     if rate:
         return rate.rate
 
@@ -71,7 +71,7 @@ def get_fx_rate(from_ccy: str, to_ccy: str, dt: Union[str, date_cls]) -> float:
         current_app.logger.exception("FX fetch failed: %s", exc)
         raise FxDownloadError("unreachable") from exc
 
-    db.session.add(FxRate(base=from_ccy, target=to_ccy, date=dt, rate=fx))
+    db.session.add(ExchangeRate(base=from_ccy, quote=to_ccy, date=dt, rate=fx))
     db.session.commit()
 
     return fx

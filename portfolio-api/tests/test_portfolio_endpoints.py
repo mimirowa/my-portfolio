@@ -161,8 +161,8 @@ def test_currency_conversion(client, monkeypatch, app):
     assert round(data['total_cost_basis'], 2) == 220.0
 
     with app.app_context():
-        from src.models.portfolio import FxRate
-        assert FxRate.query.count() == 1
+        from src.models.portfolio import ExchangeRate
+        assert ExchangeRate.query.count() == 1
 
 
 def test_portfolio_history(client, app):
@@ -476,7 +476,7 @@ def test_manual_fx_endpoint(client, app):
     resp = client.post('/api/fx/manual', json=data)
     assert resp.status_code == 200
     with app.app_context():
-        from src.models.portfolio import FxRate
+        from src.models.portfolio import ExchangeRate
         from datetime import date
-        rec = FxRate.query.filter_by(base='USD', target='SEK', date=date.today()).first()
+        rec = ExchangeRate.query.filter_by(base='USD', quote='SEK', date=date.today()).first()
         assert rec and rec.rate == 10.46
