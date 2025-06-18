@@ -13,3 +13,10 @@ PORTFOLIO_BASE_CCY = os.environ.get(
     "PORTFOLIO_BASE_CCY",
     os.environ.get("BASE_CURRENCY", "USD"),
 )
+
+# Supported currencies for transactions and price lookups.
+_supported = os.environ.get("SUPPORTED_CCY")
+if _supported:
+    SUPPORTED_CCY = [c.strip().upper() for c in _supported.split(",") if c.strip()]
+else:
+    SUPPORTED_CCY = ["USD", "EUR", "GBP", "SEK", "PLN", "JPY"]
