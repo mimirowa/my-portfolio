@@ -22,10 +22,10 @@ export const fetchSummary = (base?: string) =>
 export const fetchTransactions = () => fetch(`${BASE}/transactions`)
 export const searchStock = (s: string) =>
   fetch(`${BASE}/stocks/search/${encodeURIComponent(s)}`)
-export const fetchCurrentPrice = (symbol: string) =>
-  fetch(`${BASE}/stocks/${encodeURIComponent(symbol)}`)
-export const updatePrice = (symbol: string) =>
-  post(`/prices/update?symbol=${encodeURIComponent(symbol)}`, {})
+export const fetchCurrentPrice = (symbol: string, base?: string) =>
+  fetch(`${BASE}/stocks/${encodeURIComponent(symbol)}${base ? `?base=${base}` : ''}`)
+export const updatePrice = (symbol: string, base?: string) =>
+  post(`/prices/update?symbol=${encodeURIComponent(symbol)}${base ? `&base=${base}` : ''}`, {})
 export const addTransaction = (body: any) =>
   fetch(`${BASE}/transactions`, {
     method: 'POST',

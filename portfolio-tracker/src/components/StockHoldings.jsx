@@ -29,7 +29,7 @@ function StockHoldings({ portfolioData, onRefresh, loading }) {
       const entries = await Promise.all(
         (portfolioData || []).map(async (s) => {
           try {
-            const resp = await fetchCurrentPrice(s.symbol)
+            const resp = await fetchCurrentPrice(s.symbol, BASE_CURRENCY)
             if (!resp.ok) {
               return [s.symbol, { error: true }]
             }
@@ -55,7 +55,7 @@ function StockHoldings({ portfolioData, onRefresh, loading }) {
   const updateSingleStockPrice = async (symbol) => {
     try {
       setUpdatingStock(symbol)
-      const response = await updatePrice(symbol)
+      const response = await updatePrice(symbol, BASE_CURRENCY)
       if (response.ok) {
         const data = await response.json()
         setPrices((prev) => ({
