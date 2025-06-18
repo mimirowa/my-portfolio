@@ -4,16 +4,18 @@ import { Button } from '@/components/ui/button.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table.jsx'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog.jsx'
-import { Trash2, TrendingUp, TrendingDown } from 'lucide-react'
+import { Trash2, TrendingUp, TrendingDown, Pencil } from 'lucide-react'
 import { getCurrencySymbol } from '@/lib/utils.js'
 import ImportDialog from '@/components/ImportDialog'
 import AddTransactionButton from '@/components/AddTransactionButton'
+import EditTransactionModal from '@/components/EditTransactionModal'
 import { del } from '@/lib/api'
 import { API_BASE_URL } from '@/lib/api'
 const BASE_CURRENCY = import.meta?.env?.VITE_BASE_CURRENCY || 'USD'
 
 function TransactionHistory({ transactions, onTransactionDeleted, onTransactionAdded }) {
   const [deletingTransaction, setDeletingTransaction] = useState(null)
+  const [editingTransaction, setEditingTransaction] = useState(null)
   const [showImport, setShowImport] = useState(false)
 
   const deleteTransaction = async (transactionId) => {
@@ -123,18 +125,27 @@ function TransactionHistory({ transactions, onTransactionDeleted, onTransactionA
                     {transaction.total_value.toLocaleString()}
                   </TableCell>
                   <TableCell className="text-center">
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                          disabled={deletingTransaction === transaction.id}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
+                    <div className="flex justify-center items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => setEditingTransaction(transaction)}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            disabled={deletingTransaction === transaction.id}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
                           <AlertDialogDescription>
@@ -155,6 +166,7 @@ function TransactionHistory({ transactions, onTransactionDeleted, onTransactionA
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -195,6 +207,12 @@ function TransactionHistory({ transactions, onTransactionDeleted, onTransactionA
         open={showImport}
         onOpenChange={setShowImport}
         onImported={onTransactionAdded}
+      />
+      <EditTransactionModal
+        isOpen={!!editingTransaction}
+        onClose={() => setEditingTransaction(null)}
+        transaction={editingTransaction}
+        onTransactionUpdated={onTransactionAdded}
       />
     </Card>
   )

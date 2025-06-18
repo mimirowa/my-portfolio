@@ -417,7 +417,92 @@ def add_transaction():
             status = 202
             body["warning"] = "FX rate unavailable; please enter manually later"
         return jsonify(body), status
-        
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@portfolio_bp.route('/transactions/<int:transaction_id>', methods=['PUT', 'PATCH'])
+def update_transaction(transaction_id):
+    """Update an existing transaction"""
+    try:
+        transaction = Transaction.query.get(transaction_id)
+        if not transaction:
+            return jsonify({'error': 'Transaction not found'}), 404
+
+        data = request.get_json() or {}
+
+        base_currency = os.environ.get('PORTFOLIO_BASE_CCY', PORTFOLIO_BASE_CCY)
+
+        if 'symbol' in data:
+            symbol = data['symbol'].upper()
+            stock = Stock.query.filter_by(symbol=symbol).first()
+            if not stock:
+                from src.lib.market_data import get_company_name
+                stock = Stock(symbol=symbol, company_name=get_company_name(symbol))
+                db.session.add(stock)
+                db.session.flush()
+            transaction.stock_id = stock.id
+
+        if 'transaction_type' in data:
+            transaction.transaction_type = data['transaction_type'].lower()
+        if 'quantity' in data:
+            transaction.quantity = int(data['quantity'])
+        if 'price_per_share' in data:
+            transaction.price_per_share = float(data['price_per_share'])
+
+        if 'currency' in data:
+            currency = data['currency'].upper()
+            try:
+                validate_currency_code(currency)
+            except UnsupportedCurrency:
+                return jsonify({'error': 'Unsupported currency'}), 400
+            transaction.currency = currency
+
+        if 'transaction_date' in data:
+            try:
+                transaction.transaction_date = datetime.strptime(
+                    data['transaction_date'], '%Y-%m-%d'
+                ).date()
+            except ValueError:
+                return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+
+        if 'fee_amount' in data:
+            amt = data['fee_amount']
+            transaction.fee_amount = float(amt) if amt is not None else None
+        if 'fee_currency' in data:
+            cur = data['fee_currency']
+            transaction.fee_currency = cur.upper() if cur else None
+
+        if 'deal_amount' in data:
+            amt = data['deal_amount']
+            transaction.deal_amount = float(amt) if amt is not None else None
+        if 'deal_currency' in data:
+            cur = data['deal_currency']
+            transaction.deal_currency = cur.upper() if cur else None
+
+        if 'currency' in data or 'transaction_date' in data:
+            fx_rate = 1.0
+            fx_error = None
+            if transaction.currency != base_currency:
+                try:
+                    fx_rate = get_fx_rate(
+                        transaction.currency,
+                        base_currency,
+                        transaction.transaction_date,
+                    )
+                except FxDownloadError as exc:
+                    fx_error = str(exc)
+                    fx_rate = None
+                except UnsupportedCurrency:
+                    return jsonify({'error': 'Unsupported currency'}), 400
+            transaction.fx_rate = fx_rate
+            transaction.fx_error = fx_error
+
+        db.session.commit()
+        return jsonify(transaction.to_dict())
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500

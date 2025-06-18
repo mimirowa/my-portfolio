@@ -30,6 +30,26 @@ def test_add_transaction_and_fetch(client):
     assert items[0]['stock_symbol'] == 'AAPL'
 
 
+def test_update_transaction(client):
+    data = {
+        'symbol': 'AAPL',
+        'transaction_type': 'buy',
+        'quantity': 5,
+        'price_per_share': 10.0,
+        'transaction_date': '2024-01-01'
+    }
+    post_resp = client.post('/api/portfolio/transactions', json=data)
+    assert post_resp.status_code == 201
+    tid = post_resp.get_json()['id']
+
+    update = {'quantity': 2, 'price_per_share': 20.0}
+    resp = client.put(f'/api/portfolio/transactions/{tid}', json=update)
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body['quantity'] == 2
+    assert body['price_per_share'] == 20.0
+
+
 def test_transaction_custom_currency(client, app, monkeypatch):
     def fake_get(url, params=None, **kwargs):
         class R:

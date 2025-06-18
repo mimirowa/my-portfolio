@@ -33,6 +33,13 @@ export const addTransaction = (body: any) =>
     body: JSON.stringify(body)
   })
 
+export const updateTransaction = (id: number, body: any) =>
+  fetch(`${BASE}/transactions/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+
 export async function parseGoogleFinance(raw: string) {
   const resp = await fetch(`${IMPORT_API}/google-finance/preview`, {
     method: 'POST',
