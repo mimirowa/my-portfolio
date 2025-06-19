@@ -33,6 +33,9 @@ export const addTransaction = (body: any) =>
     body: JSON.stringify(body)
   })
 
+export const overrideFxRate = (body: any) =>
+  post('/fx/override', body)
+
 export const updateTransaction = (id: number, body: any) =>
   fetch(`${BASE}/transactions/${id}`, {
     method: 'PUT',

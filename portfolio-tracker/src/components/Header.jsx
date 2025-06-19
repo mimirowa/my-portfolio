@@ -4,8 +4,7 @@ import { RefreshCw } from 'lucide-react'
 import { Switch } from '@/components/ui/switch.jsx'
 import { Label } from '@/components/ui/label.jsx'
 import { useSettings } from '@/store/settingsSlice'
-
-const CURRENCIES = ['USD','EUR','GBP','SEK','PLN','JPY']
+import { SUPPORTED_CCY } from '@/lib/currencies.js'
 
 export default function Header({ onUpdatePrices, loading }) {
   const { baseCurrency, setBaseCurrency, includeFees, setIncludeFees } = useSettings()
@@ -21,7 +20,7 @@ export default function Header({ onUpdatePrices, loading }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {CURRENCIES.map(c => (
+            {SUPPORTED_CCY.map(c => (
               <SelectItem key={c} value={c}>{c}</SelectItem>
             ))}
           </SelectContent>
