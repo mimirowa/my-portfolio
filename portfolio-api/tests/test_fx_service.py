@@ -48,3 +48,14 @@ def test_ensure_fx_rates(monkeypatch, app):
     with app.app_context():
         fx.ensure_fx_rates(date(2024, 1, 1), "USD")
     assert set(called) == set(c for c in fx.SUPPORTED_CCY if c != "USD")
+
+
+def test_get_rate_provider_failure(monkeypatch, app):
+    def fail_fetch(*args, **kwargs):
+        raise fx.FxDownloadError("boom")
+    monkeypatch.setattr(fx, "_fetch_rates", fail_fetch)
+    monkeypatch.setattr(fx, "get_fx_rate", fail_fetch)
+    monkeypatch.setattr("src.routes.portfolio.get_fx_rate", fail_fetch)
+    with app.app_context():
+        with pytest.raises(fx.FxDownloadError):
+            fx.get_rate(date(2024, 1, 1), "USD", "SEK")
