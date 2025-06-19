@@ -7,7 +7,10 @@ export default function TimeFrameTabs() {
   const { selectedRange, setRange } = usePortfolioStore()
   return (
     <Tabs value={selectedRange} onValueChange={setRange} className="w-full">
-      <TabsList className="grid grid-cols-8 w-full sm:w-fit">
+      <TabsList
+        aria-label="Select time range"
+        className="grid grid-cols-8 w-full sm:w-fit"
+      >
         {ranges.map((r) => (
           <TabsTrigger key={r} value={r} className="px-2">
             {r}

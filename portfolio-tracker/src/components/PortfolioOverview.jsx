@@ -54,7 +54,7 @@ function PortfolioOverview({ portfolioData }) {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
-        <div className="bg-white p-3 border rounded-lg shadow-lg">
+        <div role="tooltip" className="bg-white p-3 border rounded-lg shadow-lg">
           <p className="font-semibold">{data.name}</p>
           <p className="text-sm text-gray-600">
             Value: ${data.value.toLocaleString()}
@@ -72,7 +72,7 @@ function PortfolioOverview({ portfolioData }) {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
-        <div className="bg-white p-3 border rounded-lg shadow-lg">
+        <div role="tooltip" className="bg-white p-3 border rounded-lg shadow-lg">
           <p className="font-semibold">{data.symbol}</p>
           <p className="text-sm text-gray-600">
             Gain/Loss: ${data.gain.toLocaleString()}
