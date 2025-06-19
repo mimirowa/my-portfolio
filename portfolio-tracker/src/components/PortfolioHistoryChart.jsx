@@ -1,18 +1,11 @@
 import { useEffect, useState } from 'react'
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card, CardContent, CardHeader } from '@/components/ui/card.jsx'
 import { Switch } from '@/components/ui/switch.jsx'
 import { DateTime } from 'luxon'
 import { usePortfolioStore } from '@/store/portfolioStore'
 import TimeFrameTabs from './TimeFrameTabs'
+import CustomTooltip from './CustomTooltip'
 import PortfolioHeader from './PortfolioHeader'
 
 function PortfolioHistoryChart() {
@@ -29,18 +22,6 @@ function PortfolioHistoryChart() {
   }))
 
   const lineKey = includeContributions ? 'with_contributions' : 'market_value_only'
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-2 border rounded shadow text-xs">
-          <p className="font-medium">{label}</p>
-          <p>${payload[0].value.toLocaleString()}</p>
-        </div>
-      )
-    }
-    return null
-  }
 
   return (
     <Card>
