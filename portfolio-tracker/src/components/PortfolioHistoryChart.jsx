@@ -17,6 +17,8 @@ import { usePortfolioStore } from '@/store/portfolioStore'
 import { useSettings } from '@/store/settingsSlice'
 import { getCurrencySymbol } from '@/lib/utils.js'
 import TimeFrameTabs from './TimeFrameTabs'
+import CustomTooltip from './CustomTooltip'
+import PortfolioHeader from './PortfolioHeader'
 
 function PortfolioHistoryChart() {
   const [includeContributions, setIncludeContributions] = useState(true)
@@ -52,7 +54,7 @@ function PortfolioHistoryChart() {
 
   const formatted = history.map((item) => ({
     ...item,
-    date: DateTime.fromISO(item.date).toLocaleString(DateTime.DATE_SHORT)
+    date: DateTime.fromISO(item.date).toLocaleString(DateTime.DATE_SHORT),
   }))
 
   const monthStarts = history
@@ -86,24 +88,22 @@ function PortfolioHistoryChart() {
       setBrushInfo(null)
     }
   }
-
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Portfolio Value</CardTitle>
-          <CardDescription>Historical portfolio value</CardDescription>
-        </div>
-        <TimeFrameTabs />
-        <div className="flex items-center space-x-2 text-sm">
-          <Switch
-            checked={includeContributions}
-            onCheckedChange={setIncludeContributions}
-            id="history-toggle"
-          />
-          <label htmlFor="history-toggle">
-            {includeContributions ? 'Include' : 'Exclude'} contributions
-          </label>
+      <CardHeader className="space-y-4">
+        <PortfolioHeader />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <TimeFrameTabs />
+          <div className="flex items-center space-x-2 text-sm">
+            <Switch
+              checked={includeContributions}
+              onCheckedChange={setIncludeContributions}
+              id="history-toggle"
+            />
+            <label htmlFor="history-toggle">
+              {includeContributions ? 'Include' : 'Exclude'} contributions
+            </label>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -114,7 +114,13 @@ function PortfolioHistoryChart() {
             </div>
           )}
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={formatted}>
+            <AreaChart data={formatted}>
+              <defs>
+                <linearGradient id="valueGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="#4f46e5" stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis />
