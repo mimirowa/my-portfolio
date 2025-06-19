@@ -1,32 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Switch } from '@/components/ui/switch.jsx'
-import { get } from '@/lib/api'
+import { DateTime } from 'luxon'
+import { usePortfolioStore } from '@/store/portfolioStore'
+import TimeFrameTabs from './TimeFrameTabs'
 
 function PortfolioHistoryChart() {
-  const [history, setHistory] = useState([])
   const [includeContributions, setIncludeContributions] = useState(true)
+  const { history, fetchHistory } = usePortfolioStore()
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const resp = await get('/history')
-        if (resp.ok) {
-          const data = await resp.json()
-          setHistory(data)
-        }
-      } catch (err) {
-        console.error('Error fetching portfolio history:', err)
-      }
-    }
-
     fetchHistory()
-  }, [])
+  }, [fetchHistory])
 
   const formatted = history.map((item) => ({
     ...item,
-    date: new Date(item.date).toLocaleDateString()
+    date: DateTime.fromISO(item.date).toLocaleString(DateTime.DATE_SHORT)
   }))
 
   const lineKey = includeContributions ? 'with_contributions' : 'market_value_only'
@@ -50,6 +40,7 @@ function PortfolioHistoryChart() {
           <CardTitle>Portfolio Value</CardTitle>
           <CardDescription>Historical portfolio value</CardDescription>
         </div>
+        <TimeFrameTabs />
         <div className="flex items-center space-x-2 text-sm">
           <Switch
             checked={includeContributions}
