@@ -10,7 +10,7 @@ interface TooltipProps {
 export default function CustomTooltip({ active, payload, label }: TooltipProps) {
   if (active && payload?.[0] && label) {
     return (
-      <div className="rounded-md bg-white p-2 shadow">
+      <div role="tooltip" className="rounded-md bg-white p-2 shadow">
         <div className="font-semibold text-sm">
           {fmtCurrency(payload[0].value)}
         </div>

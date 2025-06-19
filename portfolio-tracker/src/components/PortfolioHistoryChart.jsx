@@ -67,7 +67,7 @@ function PortfolioHistoryChart() {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-2 border rounded shadow text-xs">
+        <div role="tooltip" className="bg-white p-2 border rounded shadow text-xs">
           <p className="font-medium">{label}</p>
           <p>${payload[0].value.toLocaleString()}</p>
         </div>
@@ -89,14 +89,14 @@ function PortfolioHistoryChart() {
   }
   return (
     <Card>
-      <CardHeader className="space-y-4">
+      <CardHeader
+        className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+      >
         <PortfolioHeader
           includeContributions={includeContributions}
           setIncludeContributions={setIncludeContributions}
         />
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <TimeFrameTabs />
-        </div>
+        <TimeFrameTabs />
       </CardHeader>
       <CardContent>
         <div ref={containerRef} className="h-80 relative">
