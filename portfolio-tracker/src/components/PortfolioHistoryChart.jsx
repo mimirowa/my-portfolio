@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
+import { Card, CardContent, CardHeader } from '@/components/ui/card.jsx'
 import { Switch } from '@/components/ui/switch.jsx'
 import { DateTime } from 'luxon'
 import { usePortfolioStore } from '@/store/portfolioStore'
 import TimeFrameTabs from './TimeFrameTabs'
+import PortfolioHeader from './PortfolioHeader'
 
 function PortfolioHistoryChart() {
   const [includeContributions, setIncludeContributions] = useState(true)
@@ -35,21 +36,20 @@ function PortfolioHistoryChart() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Portfolio Value</CardTitle>
-          <CardDescription>Historical portfolio value</CardDescription>
-        </div>
-        <TimeFrameTabs />
-        <div className="flex items-center space-x-2 text-sm">
-          <Switch
-            checked={includeContributions}
-            onCheckedChange={setIncludeContributions}
-            id="history-toggle"
-          />
-          <label htmlFor="history-toggle">
-            {includeContributions ? 'Include' : 'Exclude'} contributions
-          </label>
+      <CardHeader className="space-y-4">
+        <PortfolioHeader />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <TimeFrameTabs />
+          <div className="flex items-center space-x-2 text-sm">
+            <Switch
+              checked={includeContributions}
+              onCheckedChange={setIncludeContributions}
+              id="history-toggle"
+            />
+            <label htmlFor="history-toggle">
+              {includeContributions ? 'Include' : 'Exclude'} contributions
+            </label>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
