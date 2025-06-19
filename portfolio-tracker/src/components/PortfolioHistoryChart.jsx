@@ -11,7 +11,6 @@ import {
   Brush,
 } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
-import { Switch } from '@/components/ui/switch.jsx'
 import { DateTime } from 'luxon'
 import { usePortfolioStore } from '@/store/portfolioStore'
 import { useSettings } from '@/store/settingsSlice'
@@ -91,19 +90,12 @@ function PortfolioHistoryChart() {
   return (
     <Card>
       <CardHeader className="space-y-4">
-        <PortfolioHeader />
+        <PortfolioHeader
+          includeContributions={includeContributions}
+          setIncludeContributions={setIncludeContributions}
+        />
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <TimeFrameTabs />
-          <div className="flex items-center space-x-2 text-sm">
-            <Switch
-              checked={includeContributions}
-              onCheckedChange={setIncludeContributions}
-              id="history-toggle"
-            />
-            <label htmlFor="history-toggle">
-              {includeContributions ? 'Include' : 'Exclude'} contributions
-            </label>
-          </div>
         </div>
       </CardHeader>
       <CardContent>
