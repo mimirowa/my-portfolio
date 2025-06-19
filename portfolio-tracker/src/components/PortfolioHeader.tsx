@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react'
+import { Switch } from '@/components/ui/switch.jsx'
 import { usePortfolioStore } from '@/store/portfolioStore'
 import { useSettings } from '@/store/settingsSlice'
 import { getCurrencySymbol } from '@/lib/utils.js'
@@ -17,7 +18,15 @@ function Chip({ value }: { value: number }) {
   )
 }
 
-export default function PortfolioHeader() {
+interface Props {
+  includeContributions: boolean
+  setIncludeContributions: (v: boolean) => void
+}
+
+export default function PortfolioHeader({
+  includeContributions,
+  setIncludeContributions,
+}: Props) {
   const { history, selectedRange } = usePortfolioStore()
   const { baseCurrency } = useSettings()
   const { current, deltaPct, deltaEuro } = useMemo(() => {
@@ -34,14 +43,26 @@ export default function PortfolioHeader() {
 
   return (
     <div className="space-y-1">
-      <div className="flex items-baseline gap-2">
-        <h1 className="text-2xl font-bold">
-          {currency}{current.toLocaleString()}
-        </h1>
-        <Chip value={deltaPct} />
-        <small className="text-muted-foreground">
-          {deltaEuro >= 0 ? '+' : ''}{deltaEuro.toLocaleString()} {selectedRange}
-        </small>
+      <div className="flex items-baseline justify-between">
+        <div className="flex items-baseline gap-2">
+          <h1 className="text-2xl font-bold">
+            {currency}{current.toLocaleString()}
+          </h1>
+          <Chip value={deltaPct} />
+          <small className="text-muted-foreground">
+            {deltaEuro >= 0 ? '+' : ''}{deltaEuro.toLocaleString()} {selectedRange}
+          </small>
+        </div>
+        <div className="flex items-center space-x-2 text-sm">
+          <Switch
+            checked={includeContributions}
+            onCheckedChange={setIncludeContributions}
+            id="history-toggle"
+          />
+          <label htmlFor="history-toggle" className="whitespace-nowrap">
+            {includeContributions ? 'Include' : 'Exclude'} contributions
+          </label>
+        </div>
       </div>
       <div className="text-xs text-muted-foreground">{now}</div>
     </div>
