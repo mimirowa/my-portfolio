@@ -40,3 +40,21 @@ test('shows current value and delta', () => {
   expect(screen.getByRole('heading').textContent).toContain('€110')
   expect(screen.getAllByText(/\+10/).length).toBeGreaterThan(0)
 })
+
+test('shows negative delta correctly', () => {
+  act(() => {
+    usePortfolioStore.setState({
+      history: [
+        { date: '2025-06-18', market_value_only: 100, with_contributions: 100 },
+        { date: '2025-06-19', market_value_only: 90, with_contributions: 90 },
+      ],
+    })
+  })
+  render(
+    <Wrapper>
+      <SetEUR />
+      <PortfolioHeader />
+    </Wrapper>
+  )
+  expect(screen.getAllByText(/-10/).length).toBeGreaterThan(0)
+})
