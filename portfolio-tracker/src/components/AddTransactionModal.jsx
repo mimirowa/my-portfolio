@@ -8,7 +8,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert.jsx'
 import { Loader2, Search, HelpCircle } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip.jsx'
 import { getCurrencySymbol } from '@/lib/utils.js'
-import { searchStock as fetchStock, addTransaction } from '@/lib/api'
+import { searchStock as fetchStock, addTransaction, overrideFxRate } from '@/lib/api'
+import { SUPPORTED_CCY } from '@/lib/currencies.js'
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible.jsx'
 import { toast } from 'sonner'
 
 const BASE_CURRENCY = import.meta?.env?.VITE_BASE_CURRENCY || 'USD'
@@ -30,6 +32,8 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
   const [stockInfo, setStockInfo] = useState(null)
   const [suggestions, setSuggestions] = useState([])
   const [searchResults, setSearchResults] = useState([])
+  const [fxOpen, setFxOpen] = useState(false)
+  const [fxRates, setFxRates] = useState({})
   const quantityRef = useRef(null)
 
   useEffect(() => {
@@ -70,6 +74,13 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
     
     // Clear error when user starts typing
     if (error) setError('')
+  }
+
+  const handleFxRateChange = (quote, value) => {
+    setFxRates(prev => ({
+      ...prev,
+      [quote]: value
+    }))
   }
 
   const searchStock = async (symbolOverride) => {
@@ -171,6 +182,22 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
         delete payload.fee_currency
       }
 
+      const cleaned = Object.fromEntries(
+        Object.entries(fxRates)
+          .filter(([q, v]) => v && !Number.isNaN(parseFloat(v)))
+          .map(([q, v]) => [q, parseFloat(v)])
+      )
+      await Promise.all(
+        Object.entries(cleaned).map(([quote, rate]) =>
+          overrideFxRate({
+            date: formData.transaction_date,
+            base: formData.currency,
+            quote,
+            rate,
+          })
+        )
+      )
+
       const response = await addTransaction(payload)
       if (response.ok) {
         const data = await response.json()
@@ -202,6 +229,8 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
       fee_amount: '',
       fee_currency: BASE_CURRENCY
     })
+    setFxRates({})
+    setFxOpen(false)
     setError('')
     setStockInfo(null)
     setSuggestions([])
@@ -368,7 +397,29 @@ function AddTransactionModal({ isOpen, onClose, onTransactionAdded }) {
           </div>
         </div>
 
-          {/* Transaction Date */}
+        <Collapsible open={fxOpen} onOpenChange={setFxOpen} className="space-y-2">
+          <CollapsibleTrigger className="text-sm underline">
+            Currency exchange (optional)
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-2">
+            {SUPPORTED_CCY.filter(c => c !== formData.currency).map(ccy => (
+              <div key={ccy} className="flex items-center gap-2">
+                <Label className="w-20">
+                  {formData.currency}→{ccy}
+                </Label>
+                <Input
+                  type="number"
+                  step="0.0001"
+                  placeholder="rate"
+                  value={fxRates[ccy] || ''}
+                  onChange={(e) => handleFxRateChange(ccy, e.target.value)}
+                />
+              </div>
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Transaction Date */}
           <div className="space-y-2">
             <Label htmlFor="transaction_date">Transaction Date</Label>
             <Input
