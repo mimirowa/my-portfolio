@@ -53,6 +53,26 @@ def ensure_fx_rates(start_date: date, currency: str) -> None:
                 break
         d += timedelta(days=1)
 
+
+def parse_range(range_str: str):
+    """Return (start_date, end_date, granularity) for a range shortcut."""
+    today = date.today()
+    if not range_str:
+        return today, today, 'day'
+
+    mapping = {
+        '1D': (today - timedelta(days=1), 'hour'),
+        '5D': (today - timedelta(days=5), 'day'),
+        '1M': (today - timedelta(days=30), 'day'),
+        '6M': (today - timedelta(days=182), 'week'),
+        'YTD': (date(today.year, 1, 1), 'day'),
+        '1Y': (today - timedelta(days=365), 'week'),
+        '5Y': (today - timedelta(days=365 * 5), 'month'),
+        'MAX': (date(1970, 1, 1), 'month'),
+    }
+    start, granularity = mapping.get(range_str, (date(1970, 1, 1), 'month'))
+    return start, today, granularity
+
 # Return JSON for not found errors within this blueprint
 @portfolio_bp.errorhandler(404)
 def not_found(e):
@@ -715,18 +735,23 @@ def get_portfolio_history():
     try:
         transactions = Transaction.query.order_by(Transaction.transaction_date).all()
         if not transactions:
-            return jsonify([])
+            last_updated = db.session.query(db.func.max(Stock.last_updated)).scalar()
+            return jsonify({'history': [], 'last_updated': last_updated.isoformat() if last_updated else None})
 
-        start_param = request.args.get('start')
-        end_param = request.args.get('end')
+        range_param = request.args.get('range')
+        start_param = request.args.get('start') or request.args.get('from')
+        end_param = request.args.get('end') or request.args.get('to')
 
-        start_date = transactions[0].transaction_date
-        if start_param:
-            start_date = datetime.strptime(start_param, '%Y-%m-%d').date()
+        if range_param:
+            start_date, end_date, _ = parse_range(range_param)
+        else:
+            start_date = transactions[0].transaction_date
+            if start_param:
+                start_date = datetime.strptime(start_param, '%Y-%m-%d').date()
 
-        end_date = date.today()
-        if end_param:
-            end_date = datetime.strptime(end_param, '%Y-%m-%d').date()
+            end_date = date.today()
+            if end_param:
+                end_date = datetime.strptime(end_param, '%Y-%m-%d').date()
 
         if start_date > end_date:
             return jsonify({'error': 'start date must be before end date'}), 400
@@ -790,7 +815,11 @@ def get_portfolio_history():
 
             current += timedelta(days=1)
 
-        return jsonify(history)
+        last_updated = db.session.query(db.func.max(Stock.last_updated)).scalar()
+        return jsonify({
+            'history': history,
+            'last_updated': last_updated.isoformat() if last_updated else None
+        })
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
