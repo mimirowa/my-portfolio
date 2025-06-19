@@ -193,16 +193,18 @@ def test_portfolio_history(client, app):
     resp = client.get('/api/portfolio/history?start=2024-01-01&end=2024-02-05')
     assert resp.status_code == 200
     data = resp.get_json()
+    history = data['history']
+    assert data['last_updated']
 
     expected_len = (date(2024, 2, 5) - date(2024, 1, 1)).days + 1
-    assert len(data) == expected_len
+    assert len(history) == expected_len
 
-    assert data[0]['date'] == '2024-01-01'
-    assert data[0]['with_contributions'] == 110.0
-    assert data[0]['market_value_only'] == 10.0
+    assert history[0]['date'] == '2024-01-01'
+    assert history[0]['with_contributions'] == 110.0
+    assert history[0]['market_value_only'] == 10.0
 
-    assert data[-1]['with_contributions'] == 220.0
-    assert data[-1]['market_value_only'] == 20.0
+    assert history[-1]['with_contributions'] == 220.0
+    assert history[-1]['market_value_only'] == 20.0
 
 
 def test_search_missing(client, monkeypatch):
