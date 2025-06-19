@@ -163,6 +163,7 @@ The HTML page used for quick testing of these endpoints has been moved to
 2. Use the web interface to add transactions (choose a currency for each entry) and view holdings.
 3. Call the API directly (e.g., using `curl` or Postman) to integrate with other tools.
 4. Update prices periodically using the "Update Prices" button or the corresponding API endpoint.
+5. Refresh foreign exchange rates daily by running `python -m src.tasks.refresh_fx` in a scheduled job.
 
 ## Import trades
 
