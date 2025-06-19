@@ -18,7 +18,7 @@ function PortfolioHistoryChart() {
 
   const formatted = history.map((item) => ({
     ...item,
-    date: DateTime.fromISO(item.date).toLocaleString(DateTime.DATE_SHORT)
+    date: DateTime.fromISO(item.date).toLocaleString(DateTime.DATE_SHORT),
   }))
 
   const lineKey = includeContributions ? 'with_contributions' : 'market_value_only'
@@ -44,13 +44,28 @@ function PortfolioHistoryChart() {
       <CardContent>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={formatted}>
+            <AreaChart data={formatted}>
+              <defs>
+                <linearGradient id="valueGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="#4f46e5" stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip content={<CustomTooltip />} />
-              <Line type="monotone" dataKey={lineKey} stroke="#8884d8" dot={false} />
-            </LineChart>
+              <Area
+                type="monotone"
+                dataKey={lineKey}
+                stroke="#4f46e5"
+                strokeWidth={3}
+                fill="url(#valueGradient)"
+                fillOpacity={0.15}
+                dot={false}
+                activeDot={{ r: 4 }}
+              />
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </CardContent>
