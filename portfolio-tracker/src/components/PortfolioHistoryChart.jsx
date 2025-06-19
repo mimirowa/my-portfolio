@@ -5,6 +5,7 @@ import { Switch } from '@/components/ui/switch.jsx'
 import { DateTime } from 'luxon'
 import { usePortfolioStore } from '@/store/portfolioStore'
 import TimeFrameTabs from './TimeFrameTabs'
+import CustomTooltip from './CustomTooltip'
 
 function PortfolioHistoryChart() {
   const [includeContributions, setIncludeContributions] = useState(true)
@@ -20,18 +21,6 @@ function PortfolioHistoryChart() {
   }))
 
   const lineKey = includeContributions ? 'with_contributions' : 'market_value_only'
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-2 border rounded shadow text-xs">
-          <p className="font-medium">{label}</p>
-          <p>${payload[0].value.toLocaleString()}</p>
-        </div>
-      )
-    }
-    return null
-  }
 
   return (
     <Card>
