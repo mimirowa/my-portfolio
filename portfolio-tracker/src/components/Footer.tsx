@@ -7,6 +7,8 @@ export default function Footer() {
   return (
     <footer className="text-center text-xs text-muted-foreground py-6">
       v{version} · {API_BASE_URL}
+      <br />
+      FX conversions use end-of-day rates from exchangerate.host; figures are indicative.
     </footer>
   )
 }
