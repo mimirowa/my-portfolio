@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import {
-  LineChart,
+  AreaChart,
   Line,
   XAxis,
   YAxis,
@@ -122,7 +122,7 @@ function PortfolioHistoryChart() {
               ))}
               <Line type="monotone" dataKey={lineKey} stroke="#8884d8" dot={false} />
               {brushEnabled && <Brush dataKey="date" onChange={handleBrushChange} />}
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </CardContent>
