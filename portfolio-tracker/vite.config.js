@@ -14,4 +14,11 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // Output the production build into the Flask static folder so
+    // the backend can serve the compiled app without additional
+    // copy steps.
+    outDir: path.resolve(__dirname, "../portfolio-api/src/static"),
+    emptyOutDir: true,
+  },
 })

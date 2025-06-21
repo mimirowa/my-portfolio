@@ -32,6 +32,18 @@ pip install -r requirements.txt
 uvicorn src.main:app --reload
 ```
 
+### Production build
+
+To serve the React app from the Flask backend you need to create a production
+build. Run the following inside `portfolio-tracker`:
+
+```bash
+pnpm run build
+```
+
+The compiled files will be written to `portfolio-api/src/static` and served by
+Flask at the root URL.
+
 Each build stamps the current commit hash into the app. The footer will display
 the version like `v4e96b97` corresponding to the commit used for the build.
 
