@@ -17,3 +17,6 @@ dist/
 
 # Misc
 .DS_Store
+
+# Generated React build
+portfolio-api/src/static/
