@@ -29,7 +29,16 @@ cd ../portfolio-api
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+# start the API from the portfolio-api directory
 uvicorn src.main:app --reload
+```
+
+If you want to start the server from the repository root instead of the
+`portfolio-api` directory, pass the `--app-dir` option so Uvicorn can locate
+the `src` package:
+
+```bash
+uvicorn src.main:app --reload --app-dir portfolio-api
 ```
 
 ### Production build
@@ -40,6 +49,10 @@ build. Run the following inside `portfolio-tracker`:
 ```bash
 pnpm run build
 ```
+
+Because the compiled assets aren't tracked in Git, be sure to run the build
+whenever you set up the backend or deploy the app. The output is placed under
+`portfolio-api/src/static` and served by Flask.
 
 The compiled files will be written to `portfolio-api/src/static` and served by
 Flask at the root URL.
