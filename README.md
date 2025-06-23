@@ -16,6 +16,29 @@ VITE_BASE_CURRENCY=USD
 `VITE_IMPORT_API` is used for bulk import endpoints.
 `VITE_BASE_CURRENCY` sets the default currency shown in the UI.
 
+### Backend `.env`
+
+The Flask API loads environment variables from a `.env` file in the repository
+root. Copy `.env.example` to `.env` and fill in any required keys:
+
+```
+ALPHAVANTAGE_API_KEY=your-alpha-key
+PORTFOLIO_BASE_CCY=USD
+FALLBACK_PROVIDER=stooq
+FX_PROVIDER_URL=https://api.exchangerate.host
+FX_API_KEY=
+DATA_API_BASE_URL=
+DATA_API_KEY=
+```
+
+`ALPHAVANTAGE_API_KEY` enables live quotes from Alpha Vantage. If omitted the
+API relies solely on Manus API Hub and Stooq for prices. `FX_PROVIDER_URL` and
+`FX_API_KEY` configure the foreign exchange rates provider. `DATA_API_BASE_URL`
+and `DATA_API_KEY` point the helper `ApiClient` to an external data source.
+`FALLBACK_PROVIDER` chooses the backup quote service when the primary lookup
+fails. All of these values can also be set directly in the environment instead
+of the `.env` file.
+
 ## Getting Started
 
 This project requires **Node.js 20** and **Python 3.11+**.
