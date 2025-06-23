@@ -7,8 +7,8 @@ This repository contains a Flask backend (`portfolio-api`) and a React frontend 
 The front-end uses Vite environment variables. Copy `.env.local.example` in `portfolio-tracker` to `.env.local` and update the values as needed.
 
 ```
-VITE_PORTFOLIO_API=http://localhost:5000/api/portfolio
-VITE_IMPORT_API=http://localhost:5000/api/import
+VITE_PORTFOLIO_API=http://localhost:8000/api/portfolio
+VITE_IMPORT_API=http://localhost:8000/api/import
 VITE_BASE_CURRENCY=USD
 ```
 
@@ -29,16 +29,14 @@ cd ../portfolio-api
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-# start the API from the portfolio-api directory
-uvicorn src.main:app --reload
+# start the API from the portfolio-api directory (dev only)
+flask run --reload
 ```
 
-If you want to start the server from the repository root instead of the
-`portfolio-api` directory, pass the `--app-dir` option so Uvicorn can locate
-the `src` package:
+If you prefer running from the repository root set `FLASK_APP` to the backend path:
 
 ```bash
-uvicorn src.main:app --reload --app-dir portfolio-api
+FLASK_APP=portfolio-api/src/main.py flask run --reload
 ```
 
 ### Production build
@@ -48,6 +46,12 @@ build. Run the following inside `portfolio-tracker`:
 
 ```bash
 pnpm run build
+```
+
+After building, start the API with Gunicorn:
+
+```bash
+gunicorn -b 0.0.0.0:8000 "src.main:create_app()"
 ```
 
 Because the compiled assets aren't tracked in Git, be sure to run the build
@@ -69,15 +73,9 @@ When `ALPHAVANTAGE_API_KEY` is set the API will query Alpha Vantage for live
 quotes. If a symbol is not available there, it falls back to [Stooq](https://stooq.com).
 Set `FALLBACK_PROVIDER=stooq` in your `.env` to enable this behaviour.
 
-# My Portfolio
-
-This repository contains a Flask API and a React front-end for tracking investment portfolios.
+This project combines a Flask-based backend API with a modern React frontend to help track stock investments. It allows you to record buy/sell transactions, fetch current prices, and visualize portfolio performance.
 
 The API stores its data in an SQLite database located at `portfolio-api/data/portfolio.db`. This folder is created automatically when the server starts, so it should not be committed to version control.
-
-# Portfolio Tracker
-
-This project combines a Flask-based backend API with a modern React frontend to help track stock investments. It allows you to record buy/sell transactions, fetch current prices, and visualize portfolio performance.
 
 ## Features
 
@@ -137,7 +135,7 @@ pip install -r requirements.txt
 python src/main.py
 ```
 
-The API will start on `http://localhost:5000`.
+The API will start on `http://localhost:8000`.
 
 ## Frontend Setup
 
@@ -196,6 +194,16 @@ Paste your Google Finance activity text directly into the app.
 Open the **Import ▸ Google Finance** dialog on the Transactions page, preview the
 parsed rows and confirm to save them. Save the confirmed rows to your portfolio
 with the **Confirm & Save** button.
+
+### Deploying on Raspberry Pi
+
+Copy the systemd unit and enable the service:
+
+```bash
+sudo cp deploy/portfolio-api.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now portfolio-api
+```
 
 ## Running Tests
 
