@@ -22,6 +22,19 @@ API returns no data (or the symbol is unsupported), the implementation falls
 back to the Stooq provider. Results are cached in memory for 60&nbsp;seconds to
 avoid hitting the APIs repeatedly.
 
+### Configuration & API keys
+
+The backend reads its provider settings from environment variables (or a `.env`
+file loaded via *python-dotenv*). Important variables include:
+
+* `ALPHAVANTAGE_API_KEY` – optional key enabling Alpha Vantage quotes.
+* `FALLBACK_PROVIDER` – provider to query when the main service fails.
+* `FX_PROVIDER_URL` – endpoint for currency rates, defaults to
+  `https://api.exchangerate.host`.
+* `FX_API_KEY` – authentication token for the FX provider (if required).
+* `DATA_API_BASE_URL` / `DATA_API_KEY` – base URL and token for the external data
+  API used by `ApiClient`.
+
 ## manual override route
 
 The `/api/fx/override` endpoint accepts a JSON body containing `date`, `base`,
